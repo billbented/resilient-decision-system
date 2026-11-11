@@ -1,0 +1,194 @@
+{
+  "request_id": "8a947757-1d99-42ea-bcfe-b18e5a29dfd4",
+  "workflow": "loan_application",
+  "workflow_version": 2,
+  "config_hash": "8e695389fb8df33bc89ab54c925d782e55375997abe39681cf8d0c8e3a583075",
+  "status": "APPROVED",
+  "decision": "APPROVED",
+  "input": {
+    "applicant_id": "APP-1004",
+    "full_name": "Neha Iyer",
+    "age": 34,
+    "annual_income": 6000000,
+    "loan_amount": 4500000,
+    "employment_status": "salaried",
+    "existing_debt": 0,
+    "kyc_verified": true
+  },
+  "path": [
+    "eligibility",
+    "credit_assessment",
+    "affordability",
+    "senior_approval"
+  ],
+  "rules_triggered": [
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.kyc_verified=True == True -> true",
+      "data_refs": {
+        "input.kyc_verified": true
+      }
+    },
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.age=34 between [21, 65] -> true",
+      "data_refs": {
+        "input.age": 34
+      }
+    },
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-003",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.employment_status='salaried' not in ['unemployed'] -> true",
+      "data_refs": {
+        "input.employment_status": "salaried"
+      }
+    },
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-004",
+      "status": "skipped",
+      "effect": null,
+      "explanation": "not applicable: input.employment_status='salaried' == 'self_employed' -> false",
+      "data_refs": {
+        "input.employment_status": "salaried"
+      }
+    },
+    {
+      "stage": "credit_assessment",
+      "rule_id": "R-CRD-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "deps.credit.score=801 >= 550 -> true",
+      "data_refs": {
+        "deps.credit.score": 801
+      }
+    },
+    {
+      "stage": "credit_assessment",
+      "rule_id": "R-CRD-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "deps.credit.open_defaults=0 == 0 -> true",
+      "data_refs": {
+        "deps.credit.open_defaults": 0
+      }
+    },
+    {
+      "stage": "credit_assessment",
+      "rule_id": "R-CRD-003",
+      "status": "passed",
+      "effect": null,
+      "explanation": "deps.credit.score=801 >= 700 -> true",
+      "data_refs": {
+        "deps.credit.score": 801
+      }
+    },
+    {
+      "stage": "affordability",
+      "rule_id": "R-AFF-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.loan_amount=4500000 <= 30000000 (input.annual_income x5) -> true",
+      "data_refs": {
+        "input.annual_income": 6000000,
+        "input.loan_amount": 4500000
+      }
+    },
+    {
+      "stage": "affordability",
+      "rule_id": "R-AFF-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.existing_debt=0 <= 3000000.0 (input.annual_income x0.5) -> true",
+      "data_refs": {
+        "input.annual_income": 6000000,
+        "input.existing_debt": 0
+      }
+    },
+    {
+      "stage": "senior_approval",
+      "rule_id": "R-SNR-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "(deps.credit.score=801 >= 750 -> true AND input.employment_status='salaried' == 'salaried' -> true)",
+      "data_refs": {
+        "deps.credit.score": 801,
+        "input.employment_status": "salaried"
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "event": "dependency.called",
+      "stage": "credit_assessment",
+      "dependency": "credit_bureau",
+      "output": {
+        "bureau_ref": "CB-04C35D19",
+        "open_defaults": 0,
+        "score": 801
+      },
+      "error": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "latency_ms": 0.0,
+          "outcome": "ok"
+        }
+      ],
+      "policy": null
+    }
+  ],
+  "decision_reasons": {
+    "decided_at_stage": "senior_approval",
+    "outcome": "pass",
+    "decisive_rules": [],
+    "flags": [],
+    "path": [
+      "eligibility",
+      "credit_assessment",
+      "affordability",
+      "senior_approval"
+    ],
+    "branch": null
+  },
+  "manual_review": null,
+  "state_history": [
+    "- -> RECEIVED (request received)",
+    "RECEIVED -> IN_PROGRESS (schema validation passed)",
+    "IN_PROGRESS -> APPROVED (stage 'senior_approval' outcome=pass)"
+  ],
+  "audit_integrity": {
+    "valid": true,
+    "entries": 8,
+    "head": "abe1d22c9d727bde59956dadcf04ea8eecb8df3a783be72efcba926d9309c194"
+  },
+  "narrative": [
+    "Request 8a947757-1d99-42ea-bcfe-b18e5a29dfd4 | workflow loan_application v2 (config 8e695389fb8d) | status APPROVED",
+    "Stage 'eligibility': 3 passed, 0 failed, 1 skipped -> outcome PASS -> credit_assessment",
+    "   [PASS] R-ELG-001 KYC must be verified: input.kyc_verified=True == True -> true",
+    "   [PASS] R-ELG-002 Applicant age must be 21-65: input.age=34 between [21, 65] -> true",
+    "   [PASS] R-ELG-003 Applicant must have an income source: input.employment_status='salaried' not in ['unemployed'] -> true",
+    "   [SKIP] R-ELG-004 Self-employed applicants need income >= 5,00,000: not applicable: input.employment_status='salaried' == 'self_employed' -> false",
+    "Dependency credit_bureau consulted at stage 'credit_assessment' (1 attempt): {'bureau_ref': 'CB-04C35D19', 'open_defaults': 0, 'score': 801}",
+    "Stage 'credit_assessment': 3 passed, 0 failed, 0 skipped -> outcome PASS -> affordability",
+    "   [PASS] R-CRD-001 Bureau score must be >= 550: deps.credit.score=801 >= 550 -> true",
+    "   [PASS] R-CRD-002 No open defaults on record: deps.credit.open_defaults=0 == 0 -> true",
+    "   [PASS] R-CRD-003 Score >= 700 for straight-through approval: deps.credit.score=801 >= 700 -> true",
+    "Stage 'affordability': 2 passed, 0 failed, 0 skipped -> outcome PASS -> senior_approval via branch [input.loan_amount=4500000 > 2000000 -> true]",
+    "   [PASS] R-AFF-001 Loan must not exceed 5x annual income: input.loan_amount=4500000 <= 30000000 (input.annual_income x5) -> true",
+    "   [PASS] R-AFF-002 Existing debt should be <= 50% of income: input.existing_debt=0 <= 3000000.0 (input.annual_income x0.5) -> true",
+    "Stage 'senior_approval': 1 passed, 0 failed, 0 skipped -> outcome PASS -> APPROVED",
+    "   [PASS] R-SNR-001 Large loans need score >= 750 and salaried employment: (deps.credit.score=801 >= 750 -> true AND input.employment_status='salaried' == 'salaried' -> true)",
+    "Decision APPROVED: every applicable rule passed",
+    "Audit trail: 8 entries, hash chain VALID"
+  ]
+}

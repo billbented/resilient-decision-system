@@ -1,0 +1,150 @@
+{
+  "workflow": "employee_onboarding",
+  "version": 1,
+  "description": "Employee onboarding: document checklist -> background check. Pure configuration, zero workflow-specific code.",
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "employee_id",
+      "name",
+      "department",
+      "start_date",
+      "documents",
+      "background_check"
+    ],
+    "properties": {
+      "employee_id": {
+        "type": "string",
+        "pattern": "^EMP-[0-9]{3,}$"
+      },
+      "name": {
+        "type": "string",
+        "minLength": 2
+      },
+      "department": {
+        "type": "string",
+        "enum": [
+          "engineering",
+          "finance",
+          "sales",
+          "operations",
+          "hr"
+        ]
+      },
+      "start_date": {
+        "type": "string",
+        "format": "date"
+      },
+      "documents": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "id_proof",
+            "offer_letter_signed",
+            "bank_details",
+            "nda_signed",
+            "education_certificates"
+          ]
+        }
+      },
+      "background_check": {
+        "type": "string",
+        "enum": [
+          "clear",
+          "pending",
+          "flagged"
+        ]
+      }
+    }
+  },
+  "start": "document_check",
+  "stages": {
+    "document_check": {
+      "rules": [
+        {
+          "id": "R-EMP-001",
+          "type": "mandatory",
+          "description": "Government id proof submitted",
+          "condition": {
+            "field": "input.documents",
+            "op": "contains",
+            "value": "id_proof"
+          },
+          "on_fail": "review"
+        },
+        {
+          "id": "R-EMP-002",
+          "type": "mandatory",
+          "description": "Signed offer letter submitted",
+          "condition": {
+            "field": "input.documents",
+            "op": "contains",
+            "value": "offer_letter_signed"
+          },
+          "on_fail": "review"
+        },
+        {
+          "id": "R-EMP-003",
+          "type": "conditional",
+          "description": "Finance staff must sign an NDA",
+          "when": {
+            "field": "input.department",
+            "op": "eq",
+            "value": "finance"
+          },
+          "condition": {
+            "field": "input.documents",
+            "op": "contains",
+            "value": "nda_signed"
+          },
+          "on_fail": "review"
+        },
+        {
+          "id": "R-EMP-004",
+          "type": "policy",
+          "description": "Bank details needed before first payroll",
+          "condition": {
+            "field": "input.documents",
+            "op": "contains",
+            "value": "bank_details"
+          },
+          "on_fail": "flag"
+        }
+      ],
+      "transitions": {
+        "pass": "background"
+      }
+    },
+    "background": {
+      "rules": [
+        {
+          "id": "R-EMP-005",
+          "type": "mandatory",
+          "description": "Background check must not be flagged",
+          "condition": {
+            "field": "input.background_check",
+            "op": "ne",
+            "value": "flagged"
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-EMP-006",
+          "type": "mandatory",
+          "description": "Background check must be complete",
+          "condition": {
+            "field": "input.background_check",
+            "op": "eq",
+            "value": "clear"
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "APPROVED"
+      }
+    }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "request_id": "7fd4dc92-a063-4039-8945-ba470bd3a828",
+  "workflow": "vendor_approval",
+  "workflow_version": 1,
+  "config_hash": "8e124e6f99c14775b6e973d1bb07442d1702168f9b6ffc02991ba65079f2b066",
+  "status": "REJECTED",
+  "decision": "REJECTED",
+  "input": {
+    "vendor_id": "VEN-301",
+    "legal_name": "Sanctioned Metals LLC",
+    "country": "AE",
+    "tax_id": "AE1234567890",
+    "annual_contract_value": 400000,
+    "years_in_business": 6,
+    "bank_account_verified": true,
+    "has_iso_cert": false
+  },
+  "path": [
+    "compliance"
+  ],
+  "rules_triggered": [
+    {
+      "stage": "compliance",
+      "rule_id": "R-VEN-001",
+      "status": "failed",
+      "effect": "reject",
+      "explanation": "deps.sanctions.hit=True == False -> false",
+      "data_refs": {
+        "deps.sanctions.hit": true
+      }
+    },
+    {
+      "stage": "compliance",
+      "rule_id": "R-VEN-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.tax_id='AE1234567890' matches '^[A-Z0-9]{10,15}$' -> true",
+      "data_refs": {
+        "input.tax_id": "AE1234567890"
+      }
+    },
+    {
+      "stage": "compliance",
+      "rule_id": "R-VEN-003",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.bank_account_verified=True == True -> true",
+      "data_refs": {
+        "input.bank_account_verified": true
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "event": "dependency.called",
+      "stage": "compliance",
+      "dependency": "sanctions_screening",
+      "output": {
+        "hit": true,
+        "lists_checked": [
+          "UN",
+          "OFAC",
+          "EU"
+        ],
+        "match_score": 0.97
+      },
+      "error": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "latency_ms": 0.0,
+          "outcome": "ok"
+        }
+      ],
+      "policy": null
+    }
+  ],
+  "decision_reasons": {
+    "decided_at_stage": "compliance",
+    "outcome": "reject",
+    "decisive_rules": [
+      {
+        "rule_id": "R-VEN-001",
+        "description": "No sanctions-list match",
+        "effect": "reject",
+        "explanation": "deps.sanctions.hit=True == False -> false",
+        "reason": null
+      }
+    ],
+    "flags": [],
+    "path": [
+      "compliance"
+    ],
+    "branch": null
+  },
+  "manual_review": null,
+  "state_history": [
+    "- -> RECEIVED (request received)",
+    "RECEIVED -> IN_PROGRESS (schema validation passed)",
+    "IN_PROGRESS -> REJECTED (stage 'compliance' outcome=reject)"
+  ],
+  "audit_integrity": {
+    "valid": true,
+    "entries": 5,
+    "head": "f897eedd4a54ffb25a5d2f381131cede4dcbbee7c574111ad94fda0375bd2403"
+  },
+  "narrative": [
+    "Request 7fd4dc92-a063-4039-8945-ba470bd3a828 | workflow vendor_approval v1 (config 8e124e6f99c1) | status REJECTED",
+    "Dependency sanctions_screening consulted at stage 'compliance' (1 attempt): {'hit': True, 'lists_checked': ['UN', 'OFAC', 'EU'], 'match_score': 0.97}",
+    "Stage 'compliance': 2 passed, 1 failed, 0 skipped -> outcome REJECT -> REJECTED",
+    "   [FAIL] R-VEN-001 No sanctions-list match: deps.sanctions.hit=True == False -> false => REJECT",
+    "   [PASS] R-VEN-002 Tax id must be 10-15 alphanumerics: input.tax_id='AE1234567890' matches '^[A-Z0-9]{10,15}$' -> true",
+    "   [PASS] R-VEN-003 Bank account must be verified: input.bank_account_verified=True == True -> true",
+    "Decision REJECTED driven by: R-VEN-001 (reject)",
+    "Audit trail: 5 entries, hash chain VALID"
+  ]
+}

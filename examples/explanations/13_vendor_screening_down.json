@@ -1,0 +1,100 @@
+{
+  "request_id": "8e551818-7cd3-44b4-81f2-7755fcf2fe2c",
+  "workflow": "vendor_approval",
+  "workflow_version": 1,
+  "config_hash": "8e124e6f99c14775b6e973d1bb07442d1702168f9b6ffc02991ba65079f2b066",
+  "status": "MANUAL_REVIEW",
+  "decision": "MANUAL_REVIEW",
+  "input": {
+    "vendor_id": "VEN-302",
+    "legal_name": "Acme Fasteners Pvt Ltd",
+    "country": "IN",
+    "tax_id": "AAACA1234Q",
+    "annual_contract_value": 400000,
+    "years_in_business": 6,
+    "bank_account_verified": true,
+    "has_iso_cert": false
+  },
+  "path": [],
+  "rules_triggered": [],
+  "dependencies": [
+    {
+      "event": "dependency.failed",
+      "stage": "compliance",
+      "dependency": "sanctions_screening",
+      "output": null,
+      "error": "sanctions_screening: retries exhausted after 3 attempts",
+      "attempts": [
+        {
+          "attempt": 1,
+          "backoff_ms": 10.2,
+          "error": "sanctions_screening: timed out",
+          "outcome": "transient_error"
+        },
+        {
+          "attempt": 2,
+          "backoff_ms": 23.5,
+          "error": "sanctions_screening: timed out",
+          "outcome": "transient_error"
+        },
+        {
+          "attempt": 3,
+          "error": "sanctions_screening: timed out",
+          "outcome": "transient_error"
+        }
+      ],
+      "policy": "review"
+    }
+  ],
+  "decision_reasons": {
+    "decided_at_stage": "compliance",
+    "outcome": "review",
+    "dependency_failure": {
+      "dependency": "sanctions_screening",
+      "error": "sanctions_screening: retries exhausted after 3 attempts",
+      "error_type": "dependency_unavailable",
+      "attempts": [
+        {
+          "attempt": 1,
+          "outcome": "transient_error",
+          "error": "sanctions_screening: timed out",
+          "backoff_ms": 10.2
+        },
+        {
+          "attempt": 2,
+          "outcome": "transient_error",
+          "error": "sanctions_screening: timed out",
+          "backoff_ms": 23.5
+        },
+        {
+          "attempt": 3,
+          "outcome": "transient_error",
+          "error": "sanctions_screening: timed out"
+        }
+      ],
+      "policy": "review",
+      "circuit_breaker": {
+        "state": "closed",
+        "consecutive_failures": 3
+      }
+    },
+    "summary": "sanctions_screening: dependency unavailable (policy=review); routed to a human"
+  },
+  "manual_review": null,
+  "state_history": [
+    "- -> RECEIVED (request received)",
+    "RECEIVED -> IN_PROGRESS (schema validation passed)",
+    "IN_PROGRESS -> MANUAL_REVIEW (dependency unavailable (policy=review))"
+  ],
+  "audit_integrity": {
+    "valid": true,
+    "entries": 4,
+    "head": "f91720a7beafda4441c9400e159aab6dee13b7b79def050e50f77143c4692580"
+  },
+  "narrative": [
+    "Request 8e551818-7cd3-44b4-81f2-7755fcf2fe2c | workflow vendor_approval v1 (config 8e124e6f99c1) | status MANUAL_REVIEW",
+    "Dependency sanctions_screening FAILED at stage 'compliance' after 3 attempt(s): sanctions_screening: retries exhausted after 3 attempts -> policy 'review'",
+    "Decision MANUAL_REVIEW: sanctions_screening: dependency unavailable (policy=review); routed to a human",
+    "Audit trail: 4 entries, hash chain VALID"
+  ]
+}

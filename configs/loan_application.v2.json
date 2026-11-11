@@ -1,0 +1,281 @@
+{
+  "workflow": "loan_application",
+  "version": 2,
+  "description": "Retail loan application: eligibility -> credit bureau -> affordability -> (senior approval for large loans)",
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "applicant_id",
+      "full_name",
+      "age",
+      "annual_income",
+      "loan_amount",
+      "employment_status",
+      "kyc_verified"
+    ],
+    "properties": {
+      "applicant_id": {
+        "type": "string",
+        "pattern": "^APP-[0-9]{4,}$"
+      },
+      "full_name": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "age": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 120
+      },
+      "annual_income": {
+        "type": "number",
+        "minimum": 0
+      },
+      "loan_amount": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 10000000
+      },
+      "employment_status": {
+        "type": "string",
+        "enum": [
+          "salaried",
+          "self_employed",
+          "unemployed",
+          "student"
+        ]
+      },
+      "existing_debt": {
+        "type": "number",
+        "minimum": 0
+      },
+      "kyc_verified": {
+        "type": "boolean"
+      }
+    }
+  },
+  "dependencies": {
+    "credit_bureau": {
+      "timeout_ms": 500,
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 20,
+        "max_delay_ms": 200
+      }
+    }
+  },
+  "retry_policy": {
+    "max_attempts": 3,
+    "backoff_seconds": [
+      30,
+      120,
+      600
+    ],
+    "on_exhausted": "MANUAL_REVIEW"
+  },
+  "start": "eligibility",
+  "stages": {
+    "eligibility": {
+      "description": "Hard eligibility gates (no external calls)",
+      "rules": [
+        {
+          "id": "R-ELG-001",
+          "type": "mandatory",
+          "description": "KYC must be verified",
+          "condition": {
+            "field": "input.kyc_verified",
+            "op": "eq",
+            "value": true
+          },
+          "on_fail": "reject",
+          "reason": "Regulatory: no lending without completed KYC"
+        },
+        {
+          "id": "R-ELG-002",
+          "type": "threshold",
+          "description": "Applicant age must be 21-65",
+          "condition": {
+            "field": "input.age",
+            "op": "between",
+            "value": [
+              21,
+              65
+            ]
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-ELG-003",
+          "type": "mandatory",
+          "description": "Applicant must have an income source",
+          "condition": {
+            "field": "input.employment_status",
+            "op": "not_in",
+            "value": [
+              "unemployed"
+            ]
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-ELG-004",
+          "type": "conditional",
+          "description": "Self-employed applicants need income >= 5,00,000",
+          "when": {
+            "field": "input.employment_status",
+            "op": "eq",
+            "value": "self_employed"
+          },
+          "condition": {
+            "field": "input.annual_income",
+            "op": "gte",
+            "value": 500000
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "credit_assessment",
+        "reject": "REJECTED",
+        "review": "MANUAL_REVIEW"
+      }
+    },
+    "credit_assessment": {
+      "description": "Pull bureau data (external dependency) and apply credit thresholds",
+      "fetch": [
+        {
+          "dependency": "credit_bureau",
+          "input": {
+            "applicant_id": "$input.applicant_id"
+          },
+          "store_as": "credit",
+          "on_unavailable": "retry"
+        }
+      ],
+      "rules": [
+        {
+          "id": "R-CRD-001",
+          "type": "threshold",
+          "description": "Bureau score must be >= 550",
+          "condition": {
+            "field": "deps.credit.score",
+            "op": "gte",
+            "value": 550
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-CRD-002",
+          "type": "dependency",
+          "description": "No open defaults on record",
+          "condition": {
+            "field": "deps.credit.open_defaults",
+            "op": "eq",
+            "value": 0
+          },
+          "on_fail": "review"
+        },
+        {
+          "id": "R-CRD-003",
+          "type": "threshold",
+          "description": "Score >= 700 for straight-through approval",
+          "condition": {
+            "field": "deps.credit.score",
+            "op": "gte",
+            "value": 700
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "affordability"
+      }
+    },
+    "affordability": {
+      "description": "Multi-step affordability checks with derived thresholds",
+      "rules": [
+        {
+          "id": "R-AFF-001",
+          "type": "composite",
+          "description": "Loan must not exceed 5x annual income",
+          "condition": {
+            "field": "input.loan_amount",
+            "op": "lte",
+            "value": {
+              "ref": "input.annual_income",
+              "multiply": 5
+            }
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-AFF-002",
+          "type": "conditional",
+          "description": "Existing debt should be <= 50% of income",
+          "when": {
+            "field": "input.existing_debt",
+            "op": "exists"
+          },
+          "condition": {
+            "field": "input.existing_debt",
+            "op": "lte",
+            "value": {
+              "ref": "input.annual_income",
+              "multiply": 0.5
+            }
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": [
+          {
+            "when": {
+              "field": "input.loan_amount",
+              "op": "gt",
+              "value": 2000000
+            },
+            "to": "senior_approval"
+          },
+          {
+            "to": "APPROVED"
+          }
+        ]
+      }
+    },
+    "senior_approval": {
+      "description": "Large loans (> 20,00,000) need a stronger credit profile",
+      "rules": [
+        {
+          "id": "R-SNR-001",
+          "type": "composite",
+          "description": "Large loans need score >= 750 and salaried employment",
+          "condition": {
+            "all": [
+              {
+                "field": "deps.credit.score",
+                "op": "gte",
+                "value": 750
+              },
+              {
+                "field": "input.employment_status",
+                "op": "eq",
+                "value": "salaried"
+              }
+            ]
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "APPROVED"
+      }
+    }
+  },
+  "changelog": [
+    "R-CRD-003: straight-through score threshold raised 650 -> 700 (risk policy update)",
+    "R-AFF-002: high existing debt now routes to MANUAL_REVIEW instead of a non-blocking flag"
+  ]
+}

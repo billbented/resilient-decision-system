@@ -1,0 +1,11 @@
+{
+  "claim_id": "CLM-5001",
+  "policy_id": "POL-778",
+  "policy_active": true,
+  "claim_type": "motor",
+  "claim_amount": 18000,
+  "coverage_limit": 300000,
+  "incident_date": "2026-10-02",
+  "document_id": "DOC-9001",
+  "prior_claims_12m": 0
+}

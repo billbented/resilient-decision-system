@@ -1,0 +1,157 @@
+{
+  "workflow": "vendor_approval",
+  "version": 1,
+  "description": "Vendor onboarding: sanctions screening (fail-safe to human review) -> risk tiering",
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "vendor_id",
+      "legal_name",
+      "country",
+      "tax_id",
+      "annual_contract_value",
+      "years_in_business",
+      "bank_account_verified",
+      "has_iso_cert"
+    ],
+    "properties": {
+      "vendor_id": {
+        "type": "string",
+        "pattern": "^VEN-[0-9]{3,}$"
+      },
+      "legal_name": {
+        "type": "string",
+        "minLength": 2
+      },
+      "country": {
+        "type": "string",
+        "pattern": "^[A-Z]{2}$"
+      },
+      "tax_id": {
+        "type": "string"
+      },
+      "annual_contract_value": {
+        "type": "number",
+        "minimum": 0
+      },
+      "years_in_business": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "bank_account_verified": {
+        "type": "boolean"
+      },
+      "has_iso_cert": {
+        "type": "boolean"
+      }
+    }
+  },
+  "dependencies": {
+    "sanctions_screening": {
+      "timeout_ms": 500,
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 20,
+        "max_delay_ms": 200
+      }
+    }
+  },
+  "retry_policy": {
+    "max_attempts": 3,
+    "backoff_seconds": [
+      30,
+      120,
+      600
+    ],
+    "on_exhausted": "MANUAL_REVIEW"
+  },
+  "start": "compliance",
+  "stages": {
+    "compliance": {
+      "fetch": [
+        {
+          "dependency": "sanctions_screening",
+          "input": {
+            "entity_name": "$input.legal_name",
+            "country": "$input.country"
+          },
+          "store_as": "sanctions",
+          "on_unavailable": "review"
+        }
+      ],
+      "rules": [
+        {
+          "id": "R-VEN-001",
+          "type": "dependency",
+          "description": "No sanctions-list match",
+          "condition": {
+            "field": "deps.sanctions.hit",
+            "op": "eq",
+            "value": false
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-VEN-002",
+          "type": "mandatory",
+          "description": "Tax id must be 10-15 alphanumerics",
+          "condition": {
+            "field": "input.tax_id",
+            "op": "matches",
+            "value": "^[A-Z0-9]{10,15}$"
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-VEN-003",
+          "type": "mandatory",
+          "description": "Bank account must be verified",
+          "condition": {
+            "field": "input.bank_account_verified",
+            "op": "eq",
+            "value": true
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "risk_tiering"
+      }
+    },
+    "risk_tiering": {
+      "rules": [
+        {
+          "id": "R-VEN-004",
+          "type": "threshold",
+          "description": "At least 2 years in business",
+          "condition": {
+            "field": "input.years_in_business",
+            "op": "gte",
+            "value": 2
+          },
+          "on_fail": "review"
+        },
+        {
+          "id": "R-VEN-005",
+          "type": "conditional",
+          "description": "Contracts > 10,00,000 require ISO certification",
+          "when": {
+            "field": "input.annual_contract_value",
+            "op": "gt",
+            "value": 1000000
+          },
+          "condition": {
+            "field": "input.has_iso_cert",
+            "op": "eq",
+            "value": true
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "APPROVED"
+      }
+    }
+  }
+}

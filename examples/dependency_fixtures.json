@@ -1,0 +1,47 @@
+{
+  "credit_bureau": {
+    "APP-1001": {
+      "score": 742,
+      "open_defaults": 0
+    },
+    "APP-1002": {
+      "score": 680,
+      "open_defaults": 0
+    },
+    "APP-1003": {
+      "score": 512,
+      "open_defaults": 2
+    },
+    "APP-1004": {
+      "score": 801,
+      "open_defaults": 0
+    },
+    "APP-1005": {
+      "score": 735,
+      "open_defaults": 1
+    }
+  },
+  "document_verifier": {
+    "DOC-9001": {
+      "verified": true,
+      "confidence": 0.94,
+      "tamper_detected": false
+    },
+    "DOC-9002": {
+      "verified": false,
+      "confidence": 0.58,
+      "tamper_detected": false
+    },
+    "DOC-9003": {
+      "verified": false,
+      "confidence": 0.31,
+      "tamper_detected": true
+    },
+    "DOC-9004": {
+      "verified": true,
+      "confidence": 0.79,
+      "tamper_detected": false
+    }
+  },
+  "sanctions_screening": {}
+}

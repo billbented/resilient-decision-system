@@ -1,0 +1,161 @@
+{
+  "request_id": "d038244f-a03e-429a-88f3-cfae6674b702",
+  "workflow": "insurance_claim",
+  "workflow_version": 1,
+  "config_hash": "5daffabe0b0765569b41684c19368be7480fe56b51fbc7988fed9aa5fcd63120",
+  "status": "REJECTED",
+  "decision": "REJECTED",
+  "input": {
+    "claim_id": "CLM-5002",
+    "policy_id": "POL-778",
+    "policy_active": true,
+    "claim_type": "motor",
+    "claim_amount": 240000,
+    "coverage_limit": 300000,
+    "incident_date": "2026-10-02",
+    "document_id": "DOC-9003",
+    "prior_claims_12m": 0
+  },
+  "path": [
+    "policy_checks",
+    "document_verification"
+  ],
+  "rules_triggered": [
+    {
+      "stage": "policy_checks",
+      "rule_id": "R-CLM-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.policy_active=True == True -> true",
+      "data_refs": {
+        "input.policy_active": true
+      }
+    },
+    {
+      "stage": "policy_checks",
+      "rule_id": "R-CLM-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.claim_amount=240000 <= 300000 (input.coverage_limit) -> true",
+      "data_refs": {
+        "input.claim_amount": 240000,
+        "input.coverage_limit": 300000
+      }
+    },
+    {
+      "stage": "policy_checks",
+      "rule_id": "R-CLM-003",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.prior_claims_12m=0 < 3 -> true",
+      "data_refs": {
+        "input.prior_claims_12m": 0
+      }
+    },
+    {
+      "stage": "document_verification",
+      "rule_id": "R-DOC-001",
+      "status": "failed",
+      "effect": "reject",
+      "explanation": "deps.doc.tamper_detected=True == False -> false",
+      "data_refs": {
+        "deps.doc.tamper_detected": true
+      }
+    },
+    {
+      "stage": "document_verification",
+      "rule_id": "R-DOC-002",
+      "status": "failed",
+      "effect": "review",
+      "explanation": "deps.doc.verified=False == True -> false",
+      "data_refs": {
+        "deps.doc.verified": false
+      }
+    },
+    {
+      "stage": "document_verification",
+      "rule_id": "R-DOC-003",
+      "status": "failed",
+      "effect": "flag",
+      "explanation": "deps.doc.confidence=0.31 >= 0.85 -> false",
+      "data_refs": {
+        "deps.doc.confidence": 0.31
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "event": "dependency.called",
+      "stage": "document_verification",
+      "dependency": "document_verifier",
+      "output": {
+        "confidence": 0.31,
+        "tamper_detected": true,
+        "verified": false
+      },
+      "error": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "latency_ms": 0.0,
+          "outcome": "ok"
+        }
+      ],
+      "policy": null
+    }
+  ],
+  "decision_reasons": {
+    "decided_at_stage": "document_verification",
+    "outcome": "reject",
+    "decisive_rules": [
+      {
+        "rule_id": "R-DOC-001",
+        "description": "No document tampering detected",
+        "effect": "reject",
+        "explanation": "deps.doc.tamper_detected=True == False -> false",
+        "reason": null
+      },
+      {
+        "rule_id": "R-DOC-002",
+        "description": "Documents verified by provider",
+        "effect": "review",
+        "explanation": "deps.doc.verified=False == True -> false",
+        "reason": null
+      }
+    ],
+    "flags": [
+      "R-DOC-003"
+    ],
+    "path": [
+      "policy_checks",
+      "document_verification"
+    ],
+    "branch": null
+  },
+  "manual_review": null,
+  "state_history": [
+    "- -> RECEIVED (request received)",
+    "RECEIVED -> IN_PROGRESS (schema validation passed)",
+    "IN_PROGRESS -> REJECTED (stage 'document_verification' outcome=reject)"
+  ],
+  "audit_integrity": {
+    "valid": true,
+    "entries": 6,
+    "head": "734ca0d76d8cdee6feb1fe3743cef35871b3c38c1f509d16605510d8904bd571"
+  },
+  "narrative": [
+    "Request d038244f-a03e-429a-88f3-cfae6674b702 | workflow insurance_claim v1 (config 5daffabe0b07) | status REJECTED",
+    "Stage 'policy_checks': 3 passed, 0 failed, 0 skipped -> outcome PASS -> document_verification",
+    "   [PASS] R-CLM-001 Policy must be active: input.policy_active=True == True -> true",
+    "   [PASS] R-CLM-002 Claim must be within coverage limit: input.claim_amount=240000 <= 300000 (input.coverage_limit) -> true",
+    "   [PASS] R-CLM-003 Fewer than 3 claims in last 12 months (fraud signal): input.prior_claims_12m=0 < 3 -> true",
+    "Dependency document_verifier consulted at stage 'document_verification' (1 attempt): {'confidence': 0.31, 'tamper_detected': True, 'verified': False}",
+    "Stage 'document_verification': 0 passed, 3 failed, 0 skipped -> outcome REJECT -> REJECTED",
+    "   [FAIL] R-DOC-001 No document tampering detected: deps.doc.tamper_detected=True == False -> false => REJECT",
+    "   [FAIL] R-DOC-002 Documents verified by provider: deps.doc.verified=False == True -> false => REVIEW",
+    "   [FAIL] R-DOC-003 Verification confidence >= 0.85: deps.doc.confidence=0.31 >= 0.85 -> false => FLAG",
+    "Decision REJECTED driven by: R-DOC-001 (reject); R-DOC-002 (review)",
+    "Flags raised (non-blocking): R-DOC-003",
+    "Audit trail: 6 entries, hash chain VALID"
+  ]
+}

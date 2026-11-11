@@ -1,0 +1,494 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Resilient Decision System — Solution Report</title>
+<style>
+@page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+:root { --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --accent:#4f46e5; --soft:#f8fafc; }
+* { box-sizing: border-box; }
+body { font-family: Inter, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); font-size: 10.2pt; line-height: 1.5; margin: 0; background: #fff; }
+h1 { font-size: 25pt; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
+h2 { font-size: 15pt; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 2px solid var(--accent); break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 14px 0 6px; break-after: avoid; }
+h4 { font-size: 10pt; margin: 0 0 4px; }
+h2 .n { color: var(--accent); margin-right: 6px; }
+p { margin: 5px 0 8px; }
+code { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 8.8pt; background: #f1f5f9; padding: 0 3px; border-radius: 3px; }
+pre { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 7.9pt; line-height: 1.42; background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; word-break: break-word; margin: 6px 0 10px; }
+pre.trace { background: #0f172a; color: #e2e8f0; border: none; }
+pre.trace .g { color: #4ade80; } pre.trace .r { color: #f87171; } pre.trace .m { color: #94a3b8; }
+table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 9pt; break-inside: auto; }
+th, td { text-align: left; vertical-align: top; padding: 5px 7px; border-bottom: 1px solid var(--line); }
+th { background: #f1f5f9; font-weight: 600; }
+tr { break-inside: avoid; }
+.cover { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; break-after: page; }
+.kicker { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 9pt; }
+.subtitle { font-size: 12.5pt; color: var(--muted); max-width: 150mm; }
+.meta { margin-top: 16px; font-size: 10pt; }
+.meta div { margin: 3px 0; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--soft); }
+.stat b { display: block; font-size: 19pt; color: var(--accent); line-height: 1.1; }
+.stat span { font-size: 8.6pt; color: var(--muted); }
+.callout { border-left: 4px solid var(--accent); background: #eef2ff; padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0 12px; }
+.badge { display: inline-block; font-size: 7.8pt; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #e2e8f0; }
+.badge.ok { background: #dcfce7; color: #166534; } .badge.bad { background: #fee2e2; color: #991b1b; } .badge.warn { background: #fef3c7; color: #92400e; }
+.diagram { width: 100%; height: auto; margin: 6px 0 10px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tmods { columns: 2; column-gap: 14px; }
+.tmod { break-inside: avoid; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; }
+.tmod ul { margin: 0; padding: 0; list-style: none; font-size: 7.6pt; }
+.tmod li { white-space: nowrap; }
+.tmod li { margin: 1px 0; } .tmod small { color: var(--muted); font-weight: 400; }
+.g { color: #16a34a; font-weight: 700; } .r { color: #dc2626; font-weight: 700; }
+.ex { break-inside: avoid-page; margin-bottom: 8px; }
+.ex h3 { margin-top: 10px; }
+.pb { break-before: page; }
+.small { font-size: 8.8pt; color: var(--muted); }
+pre.json { font-size: 7.6pt; }
+a { color: var(--accent); text-decoration: none; }
+</style></head><body>
+
+<section class="cover">
+ <div>
+  <div class="kicker">Hackathon submission · ScoreMe Placement Drive</div>
+  <h1>Resilient Decision System</h1>
+  <div class="subtitle">A configurable workflow decision platform that validates requests, evaluates versioned rules,
+  executes multi-stage workflows, survives dependency and storage failures, and explains every decision with a
+  tamper-evident audit trail.</div>
+  <div class="stats">
+   <div class="stat"><b>85/85</b><span>automated tests passing</span></div>
+   <div class="stat"><b>4</b><span>business workflows · 5 config versions · 0 bespoke code</span></div>
+   <div class="stat"><b>17</b><span>REST endpoints + full CLI</span></div>
+   <div class="stat"><b>0</b><span>third-party dependencies (Python stdlib only)</span></div>
+  </div>
+  <div class="callout"><b>Source code:</b> <a href="https://github.com/billbented/resilient-decision-system">https://github.com/billbented/resilient-decision-system</a><br>
+  Run: <code>python3 -m unittest discover -s tests -t .</code> · <code>python3 -m decision_platform demo</code> · <code>python3 -m decision_platform serve</code></div>
+ </div>
+ <div class="meta">
+  <div><b>Candidate:</b> Rajul Tiwari · <a href="https://github.com/billbented">github.com/billbented</a></div>
+  <div><b>Implementation:</b> Python 3.10+ · SQLite · 2,414 lines of platform code · 873 lines of tests</div>
+  <div><b>Contents:</b> 1 Summary · 2 Problem structuring · 3 Architecture · 4 Data flow · 5 Lifecycle · 6 Configuration ·
+  7 Robustness · 8 Audit &amp; explainability · 9 API · 10 Testing · 11 Decision examples · 12 Trade-offs ·
+  13 Assumptions · 14 Scaling · 15 How to run</div>
+ </div>
+</section>
+
+<h2><span class="n">1</span>Summary &amp; evaluation map</h2>
+<p>The platform is one generic engine. Each business process (loan approval, insurance claims, vendor onboarding,
+employee onboarding) is a versioned JSON workflow. A request is validated, made idempotent, pinned to the
+workflow version active at intake, and moved stage by stage. A stage optionally calls an external dependency,
+evaluates its rules and checkpoints atomically. The request ends in <code>APPROVED</code>, <code>REJECTED</code>
+or <code>MANUAL_REVIEW</code>, or parks in <code>RETRY_PENDING</code> when a dependency is down.</p>
+<table><tr><th style="width:22%">Criterion</th><th style="width:7%">Marks</th><th>How this submission addresses it</th><th style="width:10%">See</th></tr>
+<tr><td><b>Problem Structuring</b></td><td>20</td><td>Five concerns with one owner each (what/how/when/remember/outside); clear in/out-of-scope; layered packages with a composition root.</td><td>§2, §3</td></tr><tr><td><b>Architecture Quality</b></td><td>20</td><td>Transport → application → pure domain → infrastructure. Rule engine has no I/O; storage and dependencies swappable in one file.</td><td>§3–§5</td></tr><tr><td><b>Engineering Robustness</b></td><td>20</td><td>Idempotency (DB-enforced), atomic checkpoints, dependency-result cache, leases, optimistic locking, timeout + jittered retries + circuit breaker, workflow retry schedule, fail-safe fallbacks.</td><td>§7</td></tr><tr><td><b>Configurability &amp; Maintainability</b></td><td>15</td><td>Workflows are versioned JSON validated at load; hot reload is atomic; version pinning; what-if simulation; one-call rollback; 4 workflows with zero bespoke code.</td><td>§6</td></tr><tr><td><b>Explainability &amp; Auditability</b></td><td>10</td><td>Every rule records actual vs expected values, guards and data refs; hash-chained audit verified on read; chronological narrative per decision.</td><td>§8, §11</td></tr><tr><td><b>Testing Depth</b></td><td>10</td><td>85 tests incl. 12-thread duplicate race, mid-transaction storage failure, real timeouts, breaker half-open, audit tampering, HTTP end-to-end.</td><td>§10</td></tr><tr><td><b>Trade-off Defence</b></td><td>5</td><td>Each major choice listed with the rejected alternative and the reason.</td><td>§12</td></tr>
+</table>
+<h3>Deliverables checklist</h3>
+<table><tr><th>Required deliverable</th><th>Where</th></tr>
+<tr><td>Working runnable implementation with README</td><td><code>decision_platform/</code>, <code>README.md</code></td></tr>
+<tr><td>Architecture document (design, components, data flow, trade-offs, assumptions)</td><td><code>docs/ARCHITECTURE.md</code> and §2–§5, §12–§14 below</td></tr>
+<tr><td>Configuration model</td><td><code>docs/CONFIGURATION.md</code>, <code>configs/*.json</code>, §6</td></tr>
+<tr><td>API interface (REST / CLI)</td><td><code>decision_platform/api.py</code>, <code>__main__.py</code>, §9</td></tr>
+<tr><td>Tests: happy path, invalid input, duplicates, dependency failure, retry, rule change</td><td><code>tests/</code> (85 tests), §10</td></tr>
+<tr><td>Decision explanation examples</td><td><code>docs/DECISION_EXAMPLES.md</code> (14), <code>examples/explanations/*.json</code>, §11</td></tr>
+<tr><td>Constraints: requirement changes, simulated dependency, idempotency, audit logs, configurable, scaling</td><td>§6, §7, §8, §14</td></tr>
+</table>
+
+<h2><span class="n">2</span>Problem structuring</h2>
+<p>The difficult part is not evaluating an <code>if</code>. It is making decisions that stay <b>correct, repeatable and
+explainable</b> while inputs are bad, dependencies fail, clients retry and requirements change. I split the
+problem into five concerns, each with a single owner, so a change in one never touches the others:</p>
+<table><tr><th>Concern</th><th>Question</th><th>Owner</th><th>Changes when…</th></tr>
+<tr><td><b>What</b> to decide</td><td>Which checks, thresholds, branches?</td><td>Workflow JSON</td><td>business policy changes</td></tr>
+<tr><td><b>How</b> to evaluate</td><td>Does this rule pass for this data?</td><td><code>rules.py</code>, <code>conditions.py</code> (pure)</td><td>a new operator is needed</td></tr>
+<tr><td><b>When</b> / order</td><td>Next stage? retry? stop?</td><td><code>service.py</code>, <code>lifecycle.py</code></td><td>orchestration semantics change</td></tr>
+<tr><td><b>Remember</b></td><td>What happened, and can we prove it?</td><td><code>store.py</code></td><td>database changes (SQLite → Postgres)</td></tr>
+<tr><td><b>Outside world</b></td><td>How to call flaky services safely?</td><td><code>dependencies.py</code></td><td>a real integration replaces a simulator</td></tr>
+</table>
+<p class="small"><b>Out of scope (explicit):</b> authentication and authorisation, multi-tenancy, a rule-authoring UI, and real
+third-party APIs. They are simulated behind the same interface a real client would implement.</p>
+
+<h2><span class="n">3</span>Architecture</h2>
+
+<svg viewBox="0 0 720 400" class="diagram" role="img" aria-label="Component architecture">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker></defs>
+<g font-family="Inter,Helvetica,Arial" font-size="12">
+<rect x="10" y="10" width="700" height="60" rx="10" fill="#eef2ff" stroke="#6366f1"/>
+<text x="24" y="32" font-weight="700" fill="#3730a3">TRANSPORT</text>
+<rect x="120" y="22" width="170" height="38" rx="7" fill="#fff" stroke="#6366f1"/><text x="205" y="45" text-anchor="middle">api.py · REST (17 routes)</text>
+<rect x="305" y="22" width="150" height="38" rx="7" fill="#fff" stroke="#6366f1"/><text x="380" y="45" text-anchor="middle">__main__.py · CLI</text>
+<rect x="470" y="22" width="225" height="38" rx="7" fill="#fff" stroke="#6366f1"/><text x="582" y="45" text-anchor="middle">background retry / recovery worker</text>
+<rect x="10" y="95" width="700" height="78" rx="10" fill="#ecfdf5" stroke="#10b981"/>
+<text x="24" y="117" font-weight="700" fill="#047857">APPLICATION</text>
+<rect x="120" y="105" width="390" height="58" rx="7" fill="#fff" stroke="#10b981"/>
+<text x="315" y="128" text-anchor="middle" font-weight="700">service.py · DecisionService</text>
+<text x="315" y="148" text-anchor="middle" fill="#334155">intake · idempotency · stage loop · checkpoints · retry · review</text>
+<rect x="525" y="105" width="170" height="58" rx="7" fill="#fff" stroke="#10b981"/>
+<text x="610" y="128" text-anchor="middle" font-weight="700">lifecycle.py</text><text x="610" y="148" text-anchor="middle" fill="#334155">legal status transitions</text>
+<rect x="10" y="198" width="700" height="78" rx="10" fill="#fff7ed" stroke="#f59e0b"/>
+<text x="24" y="220" font-weight="700" fill="#b45309">DOMAIN</text>
+<rect x="120" y="208" width="170" height="58" rx="7" fill="#fff" stroke="#f59e0b"/><text x="205" y="231" text-anchor="middle" font-weight="700">config.py</text><text x="205" y="251" text-anchor="middle" fill="#334155">versions · validation · reload</text>
+<rect x="305" y="208" width="190" height="58" rx="7" fill="#fff" stroke="#f59e0b"/><text x="400" y="231" text-anchor="middle" font-weight="700">rules.py + conditions.py</text><text x="400" y="251" text-anchor="middle" fill="#334155">pure, deterministic, traced</text>
+<rect x="510" y="208" width="185" height="58" rx="7" fill="#fff" stroke="#f59e0b"/><text x="602" y="231" text-anchor="middle" font-weight="700">schema.py</text><text x="602" y="251" text-anchor="middle" fill="#334155">input validation</text>
+<rect x="10" y="301" width="700" height="88" rx="10" fill="#f1f5f9" stroke="#64748b"/>
+<text x="24" y="323" font-weight="700" fill="#334155">INFRA</text>
+<rect x="120" y="311" width="300" height="68" rx="7" fill="#fff" stroke="#64748b"/><text x="270" y="333" text-anchor="middle" font-weight="700">store.py · SQLite (→ Postgres)</text>
+<text x="270" y="351" text-anchor="middle" fill="#334155">requests · history · hash-chained audit</text><text x="270" y="367" text-anchor="middle" fill="#334155">dependency cache · leases · idempotency keys</text>
+<rect x="435" y="311" width="260" height="68" rx="7" fill="#fff" stroke="#64748b"/><text x="565" y="333" text-anchor="middle" font-weight="700">dependencies.py · gateway</text>
+<text x="565" y="351" text-anchor="middle" fill="#334155">timeout · retry+jitter · circuit breaker</text><text x="565" y="367" text-anchor="middle" fill="#334155">3 simulated services + fault injector</text>
+<line x1="315" y1="70" x2="315" y2="103" stroke="#475569" marker-end="url(#a)"/>
+<line x1="582" y1="70" x2="470" y2="103" stroke="#475569" marker-end="url(#a)"/>
+<line x1="230" y1="163" x2="205" y2="206" stroke="#475569" marker-end="url(#a)"/>
+<line x1="350" y1="163" x2="400" y2="206" stroke="#475569" marker-end="url(#a)"/>
+<line x1="470" y1="163" x2="590" y2="206" stroke="#475569" marker-end="url(#a)"/>
+<path d="M150 163 C 60 230, 60 300, 160 309" fill="none" stroke="#475569" marker-end="url(#a)"/>
+<path d="M500 163 C 700 220, 700 280, 640 309" fill="none" stroke="#475569" marker-end="url(#a)"/>
+</g></svg>
+<p>Dependencies point downward only. The <b>rule engine is pure</b> (no I/O, clock or randomness), which is what
+makes checkpoint/resume safe and decisions reproducible. <code>app.py</code> is the composition root, the only
+module that names concrete classes.</p>
+<table><tr><th style="width:24%">Module</th><th>Responsibility</th></tr>
+<tr><td><code>schema.py</code></td><td>JSON-Schema subset validator. Returns <i>all</i> errors so clients fix a payload in one round trip. Also self-checks schemas at config load.</td></tr>
+<tr><td><code>conditions.py</code></td><td>Declarative condition DSL (13 operators, all/any/not, derived thresholds via <code>{"ref","multiply"}</code>). Evaluation returns a full trace; a static checker rejects unknown operators or fields.</td></tr>
+<tr><td><code>rules.py</code></td><td>Evaluates the rules of a stage (guard → condition → effect). The outcome is the most severe effect: reject &gt; review &gt; pass. Also resolves conditional branches.</td></tr>
+<tr><td><code>config.py</code></td><td>Workflow model, load-time validation (references, cycles, reachability, duplicates), immutable versions, atomic hot reload, activation and rollback.</td></tr>
+<tr><td><code>lifecycle.py</code></td><td>The state machine. The only code that knows legal status transitions.</td></tr>
+<tr><td><code>dependencies.py</code></td><td>Gateway with real timeouts, bounded retries using exponential backoff and full jitter, and a circuit breaker per dependency. Includes 3 simulators and a <code>FaultInjector</code> (transient, permanent, timeout, outage, latency).</td></tr>
+<tr><td><code>store.py</code></td><td>Transactions, optimistic locking, UNIQUE idempotency, processing leases, hash-chained audit, dependency-result cache, and storage fault injection.</td></tr>
+<tr><td><code>service.py</code></td><td>Orchestrator: intake, replay, stage loop, checkpoints, diversion policies, retry and recovery sweep, human review, explain, simulate.</td></tr>
+<tr><td><code>api.py</code> / <code>__main__.py</code></td><td>Thin transport. Maps typed errors to HTTP codes (404/409/422/503), never leaks stack traces, emits structured logs.</td></tr>
+</table>
+
+<h2><span class="n">4</span>Data flow of one request</h2>
+<ol>
+<li><b>Intake.</b> <code>POST /workflows/loan_application/requests</code> with an optional <code>Idempotency-Key</code>.</li>
+<li><b>Idempotency.</b> Look up <code>(workflow, key)</code>.
+ <ul>
+  <li>Same payload hash: return the stored result (HTTP 200, <code>Idempotent-Replay: true</code>).</li>
+  <li>Different hash: HTTP 409.</li>
+  <li>No key: the canonical payload hash is the key.</li>
+ </ul></li>
+<li><b>Validate.</b> Check the schema and collect every error. Invalid requests are persisted as <code>INVALID</code>, audited and answered with 422.</li>
+<li><b>Pin and persist.</b> Store <code>workflow_version</code> and <code>config_hash</code> with the request. Request row, history and audit are written in one transaction. The UNIQUE constraint settles concurrent duplicates.</li>
+<li><b>Lease.</b> A conditional UPDATE acquires a processing lease, so only one worker handles a request.</li>
+<li><b>For each stage:</b>
+ <ul>
+  <li><b>Fetch.</b> Reuse a cached dependency result if one exists. Otherwise call the gateway, then persist the result and attempt log in their own transaction.</li>
+  <li><b>Evaluate</b> the rules. The function is pure and traced.</li>
+  <li><b>Resolve</b> the transition.</li>
+  <li><b>Checkpoint atomically:</b> current stage, the <code>stage.evaluated</code> audit entry with the full trace, and the decision if terminal.</li>
+ </ul></li>
+<li><b>Dependency down.</b> The fetch's <code>on_unavailable</code> policy decides:
+ <ul>
+  <li><code>retry</code>: go to <code>RETRY_PENDING</code> with a configured backoff (30 s, 120 s, 600 s) until <code>on_exhausted</code>.</li>
+  <li><code>review</code>: fail-safe to a human.</li>
+  <li><code>skip</code>: continue without the data.</li>
+ </ul></li>
+<li><b>Background worker.</b> Runs due retries and resumes any request whose processor died (expired lease) from its last checkpoint.</li>
+</ol>
+
+<h2><span class="n">5</span>Request lifecycle</h2>
+
+<svg viewBox="0 0 720 230" class="diagram" role="img" aria-label="Request lifecycle state machine">
+<defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker></defs>
+<g font-family="Inter,Helvetica,Arial" font-size="12" text-anchor="middle">
+<rect x="10" y="90" width="100" height="40" rx="20" fill="#e2e8f0"/><text x="60" y="114">RECEIVED</text>
+<rect x="160" y="20" width="100" height="40" rx="20" fill="#fee2e2"/><text x="210" y="44">INVALID</text>
+<rect x="160" y="90" width="120" height="40" rx="20" fill="#dbeafe"/><text x="220" y="114" font-weight="700">IN_PROGRESS</text>
+<rect x="160" y="175" width="130" height="40" rx="20" fill="#fef3c7"/><text x="225" y="199">RETRY_PENDING</text>
+<rect x="360" y="90" width="140" height="40" rx="20" fill="#fef3c7"/><text x="430" y="114">MANUAL_REVIEW</text>
+<rect x="580" y="30" width="120" height="40" rx="20" fill="#dcfce7"/><text x="640" y="54">APPROVED</text>
+<rect x="580" y="100" width="120" height="40" rx="20" fill="#fee2e2"/><text x="640" y="124">REJECTED</text>
+<rect x="580" y="170" width="120" height="40" rx="20" fill="#e2e8f0"/><text x="640" y="194">FAILED</text>
+<g stroke="#475569" fill="none">
+<line x1="110" y1="100" x2="160" y2="50" marker-end="url(#b)"/>
+<line x1="110" y1="110" x2="158" y2="110" marker-end="url(#b)"/>
+<line x1="280" y1="110" x2="358" y2="110" marker-end="url(#b)"/>
+<path d="M280 100 C 420 40, 500 45, 578 50" marker-end="url(#b)"/>
+<path d="M280 120 C 420 160, 500 150, 578 125" marker-end="url(#b)"/>
+<path d="M280 125 C 400 200, 500 195, 578 190" marker-end="url(#b)"/>
+<line x1="500" y1="104" x2="578" y2="58" marker-end="url(#b)" stroke-dasharray="4 3"/>
+<line x1="500" y1="115" x2="578" y2="118" marker-end="url(#b)" stroke-dasharray="4 3"/>
+<path d="M205 130 L 205 173" marker-end="url(#b)"/>
+<path d="M240 175 L 240 132" marker-end="url(#b)"/>
+</g>
+<text x="530" y="82" font-size="10" fill="#64748b">human review</text>
+<text x="176" y="156" font-size="10" fill="#64748b">dep down</text>
+<text x="268" y="156" font-size="10" fill="#64748b">retry</text>
+</g></svg>
+<p><code>lifecycle.check()</code> guards every status change. Terminal states are final: a second review of a
+decided request returns 409. Each transition writes a <code>state_history</code> row with the actor
+(<code>api</code>, <code>engine</code>, <code>retry-worker</code> or <code>reviewer:&lt;name&gt;</code>) and the reason.</p>
+
+<h2><span class="n">6</span>Configuration model</h2>
+<p>A workflow is a JSON document containing:</p>
+<ul>
+<li>an input schema;</li>
+<li>declared dependencies, each with a timeout and retry policy;</li>
+<li>a workflow-level retry policy;</li>
+<li>stages, each with fetches, rules (optional <code>when</code> guard, <code>condition</code>, <code>on_fail</code> of reject, review or flag) and transitions (fixed, or ordered conditional branches with a default).</li>
+</ul>
+<p>Below is the <code>affordability</code> stage of <code>loan_application</code>. It has a derived threshold, a guarded rule and conditional branching:</p>
+<pre class="json">{
+ &quot;description&quot;: &quot;Multi-step affordability checks with derived thresholds&quot;,
+ &quot;rules&quot;: [
+  {
+   &quot;id&quot;: &quot;R-AFF-001&quot;,
+   &quot;type&quot;: &quot;composite&quot;,
+   &quot;description&quot;: &quot;Loan must not exceed 5x annual income&quot;,
+   &quot;condition&quot;: {
+    &quot;field&quot;: &quot;input.loan_amount&quot;,
+    &quot;op&quot;: &quot;lte&quot;,
+    &quot;value&quot;: {
+     &quot;ref&quot;: &quot;input.annual_income&quot;,
+     &quot;multiply&quot;: 5
+    }
+   },
+   &quot;on_fail&quot;: &quot;reject&quot;
+  },
+  {
+   &quot;id&quot;: &quot;R-AFF-002&quot;,
+   &quot;type&quot;: &quot;conditional&quot;,
+   &quot;description&quot;: &quot;Existing debt should be &lt;= 50% of income&quot;,
+   &quot;when&quot;: {
+    &quot;field&quot;: &quot;input.existing_debt&quot;,
+    &quot;op&quot;: &quot;exists&quot;
+   },
+   &quot;condition&quot;: {
+    &quot;field&quot;: &quot;input.existing_debt&quot;,
+    &quot;op&quot;: &quot;lte&quot;,
+    &quot;value&quot;: {
+     &quot;ref&quot;: &quot;input.annual_income&quot;,
+     &quot;multiply&quot;: 0.5
+    }
+   },
+   &quot;on_fail&quot;: &quot;review&quot;
+  }
+ ],
+ &quot;transitions&quot;: {
+  &quot;pass&quot;: [
+   {
+    &quot;when&quot;: {
+     &quot;field&quot;: &quot;input.loan_amount&quot;,
+     &quot;op&quot;: &quot;gt&quot;,
+     &quot;value&quot;: 2000000
+    },
+    &quot;to&quot;: &quot;senior_approval&quot;
+   },
+   {
+    &quot;to&quot;: &quot;APPROVED&quot;
+   }
+  ]
+ }
+}</pre>
+<h3>A requirement change, end to end (no code touched)</h3>
+<p>Risk asks to tighten straight-through approval. <code>loan_application.v2.json</code> is added:</p>
+<table><tr><th>Rule</th><th>v1</th><th>v2</th></tr>
+<tr><td><code>R-CRD-003</code></td><td><code>deps.credit.score gte 650</code></td><td><code>deps.credit.score gte 700</code></td></tr>
+<tr><td><code>R-AFF-002</code></td><td>high existing debt → <code>flag</code></td><td>high existing debt → <code>review</code></td></tr></table>
+<ol>
+<li><b>Preview.</b> <code>POST /workflows/loan_application/simulate?version=1|2</code> shows the same applicant moving from APPROVED to MANUAL_REVIEW. Nothing is persisted.</li>
+<li><b>Deploy.</b> <code>POST /admin/reload</code>. Reload is atomic: an invalid file is rejected and the old config stays live.</li>
+<li><b>In-flight requests</b> stay pinned to v1, which is tested even across a retry.</li>
+<li><b>Rollback.</b> <code>POST /admin/workflows/loan_application/activate {"version":1}</code>.</li>
+</ol>
+<p><b>Static validation at load</b> catches all of the following:</p>
+<ul>
+<li>unknown operators and bad regexes;</li>
+<li>fields outside the <code>input.</code>, <code>deps.</code> and <code>meta.</code> namespaces;</li>
+<li>dangling stage targets, cycles and unreachable stages;</li>
+<li>branch lists without a default;</li>
+<li>duplicate rule ids and undeclared dependencies;</li>
+<li>edits to an already-published version.</li>
+</ul>
+<p>Adding a new business process is a new file. <code>employee_onboarding</code> required zero lines of code.</p>
+
+<h2><span class="n">7</span>Engineering robustness</h2>
+<table><tr><th style="width:24%">Failure</th><th>Mechanism</th><th style="width:26%">Outcome (tested)</th></tr>
+<tr><td>Invalid / malformed input</td><td>Schema validation (all errors), JSON parse guard, 1 MB body cap</td><td>422; persisted as INVALID; audited</td></tr>
+<tr><td>Duplicate request</td><td>Idempotency key + canonical payload hash</td><td>Original result, no re-processing</td></tr>
+<tr><td>Concurrent duplicates</td><td>DB UNIQUE(workflow, key) + processing lease</td><td>12 threads → 1 record, 1 bureau call</td></tr>
+<tr><td>Key reused, new payload</td><td>Hash comparison</td><td>409 idempotency_conflict</td></tr>
+<tr><td>Transient dependency error / timeout</td><td>Real deadline; retries with exponential backoff + full jitter (capped)</td><td>Absorbed within the call</td></tr>
+<tr><td>Sustained outage</td><td>Circuit breaker (closed → open → half-open); workflow <code>RETRY_PENDING</code> with backoff schedule</td><td>Fails fast; auto-recovers</td></tr>
+<tr><td>Retries exhausted</td><td><code>retry_policy.on_exhausted</code></td><td>MANUAL_REVIEW (never stuck)</td></tr>
+<tr><td>Permanent dependency error</td><td>Not retried; doesn't trip breaker</td><td>Straight to review</td></tr>
+<tr><td>Partial save (failure mid-transaction)</td><td>One transaction per checkpoint; rollback</td><td>Stays at last good stage; resumes; each stage audited exactly once</td></tr>
+<tr><td>Crash after an external call</td><td>Per-request dependency-result cache, written immediately</td><td>Resume never re-calls the service</td></tr>
+<tr><td>Worker dies mid-flight</td><td>Lease with TTL + recovery sweep</td><td>Another worker resumes</td></tr>
+<tr><td>Lost update</td><td>Optimistic locking (<code>row_version</code>)</td><td>ConcurrencyConflict, not an overwrite</td></tr>
+<tr><td>Bad config / infinite loop</td><td>Load-time validation, cycle detection, <code>max_steps</code></td><td>Rejected before it can decide anything</td></tr>
+</table>
+<div class="callout"><b>Why resume is safe:</b> a decision is a pure function of (config version, input, dependency
+results), and all three are persisted. Re-running a stage after any failure therefore yields the same answer, and the
+atomic checkpoint ensures it is recorded once.</div>
+
+<h2><span class="n">8</span>Auditability &amp; explainability</h2>
+<ul>
+<li><b>Hash-chained audit.</b> Entries are chained per request: <code>hash = sha256(prev_hash | seq | event | stage | data | ts)</code>. Every read of <code>/audit</code> re-verifies the chain. A test edits one row and gets <code>broken_at_seq: 3</code>.</li>
+<li><b>Rule traces.</b> <code>stage.evaluated</code> stores, per rule: actual value, expected value, derived-threshold source, guard result, effect and <code>data_refs</code> (exactly which fields the rule read).</li>
+<li><b>Dependency records.</b> <code>dependency.called</code> and <code>dependency.failed</code> store input, output and every attempt (outcome, error, backoff ms).</li>
+<li><b>Reproducibility.</b> Every request carries <code>workflow_version</code> and <code>config_hash</code>, so a decision can be replayed against the exact rules that made it.</li>
+<li><b>Human decisions.</b> Manual decisions record reviewer, notes and the system's original recommendation.</li>
+</ul>
+<p>Audit events for a request that hit a bureau outage and recovered, in order:</p>
+<pre>request.received → validation.passed → stage.evaluated[eligibility] → dependency.failed[credit_assessment]
+→ retry.scheduled → retry.started → dependency.called → stage.evaluated[credit_assessment]
+→ stage.evaluated[affordability] → decision.made          (hash chain VALID, eligibility not re-run)</pre>
+
+<h2><span class="n">9</span>API &amp; CLI</h2>
+<table style="break-inside: avoid"><tr><th style="width:9%">Method</th><th style="width:38%">Path</th><th>Purpose</th></tr>
+<tr><td>POST</td><td><code>/workflows/{wf}/requests</code></td><td>Submit. 201 created · 200 replay · 409 conflict · 422 invalid</td></tr>
+<tr><td>POST</td><td><code>/workflows/{wf}/simulate?version=N</code></td><td>What-if / rule-change impact (no persistence)</td></tr>
+<tr><td>GET</td><td><code>/workflows</code>, <code>/workflows/{wf}</code></td><td>Workflows, versions, definitions</td></tr>
+<tr><td>GET</td><td><code>/requests/{id}</code> · <code>/history</code> · <code>/audit</code> · <code>/explain</code></td><td>State · lifecycle · audit + integrity · narrative</td></tr>
+<tr><td>POST</td><td><code>/requests/{id}/retry</code> · <code>/review</code></td><td>Manual retry · human approve/reject</td></tr>
+<tr><td>POST</td><td><code>/admin/reload</code> · <code>/admin/workflows/{wf}/activate</code></td><td>Hot reload · pin/rollback version</td></tr>
+<tr><td>POST</td><td><code>/admin/retry-due</code> · <code>/admin/faults/{dep}</code></td><td>Recovery sweep · chaos (outage, fail_next, latency)</td></tr>
+<tr><td>GET</td><td><code>/admin/dependencies</code> · <code>/health</code></td><td>Breaker state, call counts · liveness</td></tr>
+</table>
+<p>The CLI mirrors the API: <code>submit</code>, <code>show</code>, <code>explain</code>, <code>audit</code>,
+<code>history</code>, <code>review</code>, <code>retry</code>, <code>retry-due</code>, <code>simulate</code>,
+<code>validate-config</code>, <code>workflows</code>, <code>demo</code> and <code>serve</code>.</p>
+
+<h2 class="pb"><span class="n">10</span>Testing</h2>
+<p><b>Result:</b> <code>Ran 85 tests in 0.733s</code>, <b>OK</b>, with 85 of 85 passing. Tests run against a fake clock and fault
+injectors, so failure scenarios are deterministic and the whole suite takes about one second. The API tests use a real HTTP server.</p>
+<table><tr><th style="width:26%">Required scenario</th><th>Representative tests</th></tr>
+<tr><td>Happy path</td><td>auto-approval across 3 stages; claim fast-track; vendor and onboarding approvals; HTTP submit → explain → audit</td></tr>
+<tr><td>Invalid input</td><td>all errors reported at once; bool ≠ integer; non-object body; malformed JSON → 422; nothing downstream runs</td></tr>
+<tr><td>Duplicate requests</td><td>replay returns same id; 409 on payload change; key-order independence; payload-hash fallback; 12-thread race → 1 record &amp; 1 dependency call</td></tr>
+<tr><td>Dependency failure</td><td>transient ×2 then success (backoff verified); permanent error → review; real timeout; circuit breaker opens, fails fast, half-open recovers</td></tr>
+<tr><td>Retry flow</td><td>outage → RETRY_PENDING (30 s schedule) → sweep resumes at checkpoint; exhausted after 3 → MANUAL_REVIEW</td></tr>
+<tr><td>Rule change</td><td>v1 approves / v2 reviews the same payload; in-flight pinned to v1 across retry; simulate; rollback; new workflow from config only</td></tr>
+<tr><td>Consistency</td><td>mid-transaction storage failure rolls back and resumes exactly once; intake failure leaves no residue; optimistic lock; lease</td></tr>
+</table>
+<div class="tmods"><div class='tmod'><h4>Workflow execution <small>(17)</small></h4><ul><li><span class='g'>✓</span> <code>cannot_review_non_review_request</code></li><li><span class='g'>✓</span> <code>conditional_branching_to_senior_stage</code></li><li><span class='g'>✓</span> <code>conditional_rule_applies_only_when_guard_true</code></li><li><span class='g'>✓</span> <code>cross_field_reference</code></li><li><span class='g'>✓</span> <code>derived_threshold_reject</code></li><li><span class='g'>✓</span> <code>flags_do_not_block</code></li><li><span class='g'>✓</span> <code>happy_path_approved</code></li><li><span class='g'>✓</span> <code>invalid_input</code></li><li><span class='g'>✓</span> <code>manual_review_then_human_decision</code></li><li><span class='g'>✓</span> <code>non_object_payload</code></li><li><span class='g'>✓</span> <code>reject_on_mandatory_rule</code></li><li><span class='g'>✓</span> <code>reject_on_threshold</code></li><li><span class='g'>✓</span> <code>review_requires_reviewer</code></li><li><span class='g'>✓</span> <code>second_workflow_same_engine</code></li><li><span class='g'>✓</span> <code>senior_stage_composite_rule</code></li><li><span class='g'>✓</span> <code>unknown_workflow_and_request</code></li><li><span class='g'>✓</span> <code>vendor_and_onboarding</code></li></ul></div><div class='tmod'><h4>Idempotency & duplicates <small>(7)</small></h4><ul><li><span class='g'>✓</span> <code>concurrent_duplicates_create_exactly_one_request</code></li><li><span class='g'>✓</span> <code>invalid_request_replay_is_stable</code></li><li><span class='g'>✓</span> <code>key_order_does_not_matter</code></li><li><span class='g'>✓</span> <code>keys_are_scoped_per_workflow</code></li><li><span class='g'>✓</span> <code>no_key_falls_back_to_payload_hash</code></li><li><span class='g'>✓</span> <code>same_key_different_payload_conflicts</code></li><li><span class='g'>✓</span> <code>same_key_same_payload_replays</code></li></ul></div><div class='tmod'><h4>Failures, retries, breaker, storage <small>(15)</small></h4><ul><li><span class='g'>✓</span> <code>half_open_failure_reopens</code></li><li><span class='g'>✓</span> <code>opens_fails_fast_and_half_opens</code></li><li><span class='g'>✓</span> <code>backoff_schedule_from_config</code></li><li><span class='g'>✓</span> <code>dependency_result_reused_not_recalled</code></li><li><span class='g'>✓</span> <code>fail_safe_policy_review</code></li><li><span class='g'>✓</span> <code>manual_retry_only_from_retry_pending</code></li><li><span class='g'>✓</span> <code>outage_parks_request_then_retry_succeeds</code></li><li><span class='g'>✓</span> <code>permanent_error_goes_straight_to_review</code></li><li><span class='g'>✓</span> <code>real_timeout_enforced</code></li><li><span class='g'>✓</span> <code>retries_exhausted_goes_to_configured_fallback</code></li><li><span class='g'>✓</span> <code>transient_failures_absorbed_by_in_call_retries</code></li><li><span class='g'>✓</span> <code>intake_failure_leaves_nothing_behind</code></li><li><span class='g'>✓</span> <code>optimistic_lock_detects_lost_update</code></li><li><span class='g'>✓</span> <code>partial_save_rolls_back_and_resumes</code></li><li><span class='g'>✓</span> <code>processing_lease_blocks_second_worker</code></li></ul></div><div class='tmod'><h4>Rule change & audit <small>(10)</small></h4><ul><li><span class='g'>✓</span> <code>audit_records_full_trace_and_data_refs</code></li><li><span class='g'>✓</span> <code>explanation_contents</code></li><li><span class='g'>✓</span> <code>history_is_complete</code></li><li><span class='g'>✓</span> <code>tampering_breaks_hash_chain</code></li><li><span class='g'>✓</span> <code>in_flight_request_stays_pinned_to_its_version</code></li><li><span class='g'>✓</span> <code>new_workflow_is_pure_config</code></li><li><span class='g'>✓</span> <code>rollback_by_activation</code></li><li><span class='g'>✓</span> <code>simulate_previews_impact_and_persists_nothing</code></li><li><span class='g'>✓</span> <code>simulate_with_supplied_dependency_outputs</code></li><li><span class='g'>✓</span> <code>threshold_change_changes_decision_without_code</code></li></ul></div><div class='tmod'><h4>REST API (end-to-end) <small>(6)</small></h4><ul><li><span class='g'>✓</span> <code>duplicate_returns_200_with_replay_header</code></li><li><span class='g'>✓</span> <code>invalid_input_422</code></li><li><span class='g'>✓</span> <code>malformed_json_and_unknown_routes</code></li><li><span class='g'>✓</span> <code>review_flow_and_faults_admin</code></li><li><span class='g'>✓</span> <code>submit_explain_audit</code></li><li><span class='g'>✓</span> <code>workflows_and_simulate</code></li></ul></div><div class='tmod'><h4>Configuration & registry <small>(14)</small></h4><ul><li><span class='g'>✓</span> <code>bad_operator</code></li><li><span class='g'>✓</span> <code>branches_need_default</code></li><li><span class='g'>✓</span> <code>cycle_rejected</code></li><li><span class='g'>✓</span> <code>definition_raises</code></li><li><span class='g'>✓</span> <code>duplicate_rule_id</code></li><li><span class='g'>✓</span> <code>shipped_configs_are_valid</code></li><li><span class='g'>✓</span> <code>undeclared_dependency</code></li><li><span class='g'>✓</span> <code>unknown_transition_target</code></li><li><span class='g'>✓</span> <code>unreachable_stage</code></li><li><span class='g'>✓</span> <code>activate_rollback</code></li><li><span class='g'>✓</span> <code>bad_reload_is_atomic</code></li><li><span class='g'>✓</span> <code>editing_a_published_version_in_place_is_refused</code></li><li><span class='g'>✓</span> <code>hot_reload_adds_version</code></li><li><span class='g'>✓</span> <code>unknown_workflow</code></li></ul></div><div class='tmod'><h4>Rules, conditions & schema <small>(16)</small></h4><ul><li><span class='g'>✓</span> <code>composites_trace_every_branch</code></li><li><span class='g'>✓</span> <code>derived_threshold_reference</code></li><li><span class='g'>✓</span> <code>missing_field_is_false_not_error</code></li><li><span class='g'>✓</span> <code>operators</code></li><li><span class='g'>✓</span> <code>static_check_rejects_bad_conditions</code></li><li><span class='g'>✓</span> <code>type_mismatch_is_false_with_note</code></li><li><span class='g'>✓</span> <code>bool_is_not_integer</code></li><li><span class='g'>✓</span> <code>reports_all_errors_at_once</code></li><li><span class='g'>✓</span> <code>schema_self_check</code></li><li><span class='g'>✓</span> <code>valid</code></li><li><span class='g'>✓</span> <code>conditional_branch</code></li><li><span class='g'>✓</span> <code>deterministic</code></li><li><span class='g'>✓</span> <code>guard_applies_rule</code></li><li><span class='g'>✓</span> <code>guard_skips_rule</code></li><li><span class='g'>✓</span> <code>reject_outranks_review</code></li><li><span class='g'>✓</span> <code>review_default_target</code></li></ul></div></div>
+
+<h2 class="pb"><span class="n">11</span>Decision explanation examples</h2>
+<p>All 14 scenarios are produced by <code>python3 -m decision_platform demo</code>, which uses a fixed clock and fixture-backed
+dependencies. The full input, trace and audit for each is in <code>docs/DECISION_EXAMPLES.md</code> and
+<code>examples/explanations/*.json</code>.</p>
+<table><tr><th>#</th><th>Scenario</th><th>Workflow</th><th>Output</th><th>Decisive rules</th></tr><tr><td>1</td><td>Happy path: loan auto-approved</td><td><code>loan_application</code> v2</td><td><span class="badge ok">APPROVED</span></td><td>—</td></tr><tr><td>2</td><td>Threshold miss → manual review → human approval</td><td><code>loan_application</code> v2</td><td><span class="badge ok">APPROVED</span></td><td>R-CRD-003</td></tr><tr><td>3</td><td>Hard reject: poor credit</td><td><code>loan_application</code> v2</td><td><span class="badge bad">REJECTED</span></td><td>R-CRD-001, R-CRD-002, R-CRD-003</td></tr><tr><td>4</td><td>Invalid input rejected at intake (422)</td><td><code>loan_application</code> v2</td><td><span class="badge bad">INVALID</span></td><td>—</td></tr><tr><td>5</td><td>Duplicate request replayed (idempotency)</td><td><code>loan_application</code> v2</td><td><span class="badge ok">APPROVED</span></td><td>—</td></tr><tr><td>6</td><td>Flaky dependency absorbed by retries</td><td><code>loan_application</code> v2</td><td><span class="badge warn">MANUAL_REVIEW</span></td><td>R-CRD-002</td></tr><tr><td>7</td><td>Outage → RETRY_PENDING → auto-retry succeeds</td><td><code>loan_application</code> v2</td><td><span class="badge ok">APPROVED</span></td><td>—</td></tr><tr><td>8</td><td>Rule change v1→v2 (no code change)</td><td><code>loan_application</code> v2</td><td><span class="badge warn">MANUAL_REVIEW</span></td><td>R-CRD-003</td></tr><tr><td>9</td><td>Large loan branched to senior approval</td><td><code>loan_application</code> v2</td><td><span class="badge ok">APPROVED</span></td><td>—</td></tr><tr><td>10</td><td>Insurance claim fast-tracked</td><td><code>insurance_claim</code> v1</td><td><span class="badge ok">APPROVED</span></td><td>—</td></tr><tr><td>11</td><td>Claim rejected: tampered document</td><td><code>insurance_claim</code> v1</td><td><span class="badge bad">REJECTED</span></td><td>R-DOC-001, R-DOC-002</td></tr><tr><td>12</td><td>Vendor rejected: sanctions hit</td><td><code>vendor_approval</code> v1</td><td><span class="badge bad">REJECTED</span></td><td>R-VEN-001</td></tr><tr><td>13</td><td>Screening down → fail-safe review</td><td><code>vendor_approval</code> v1</td><td><span class="badge warn">MANUAL_REVIEW</span></td><td>—</td></tr><tr><td>14</td><td>Onboarding: conditional NDA rule</td><td><code>employee_onboarding</code> v1</td><td><span class="badge warn">MANUAL_REVIEW</span></td><td>R-EMP-003</td></tr></table>
+
+<div class="ex"><h3>Example A: threshold miss → manual review → human approval</h3>
+<p><b>Input</b> (applicant <code>APP-1002</code>, bureau score 680) → <b>Output</b> <span class="badge ok">APPROVED</span> after review.</p>
+<pre class='trace'>Request 11bec0cd-cd3c-47be-8979-6ca9ca7c0501 | workflow loan_application v2 (config 8e695389fb8d) | status APPROVED
+Stage &#x27;eligibility&#x27;: 3 passed, 0 failed, 1 skipped -&gt; outcome PASS -&gt; credit_assessment
+   <b class="g">[PASS]</b> R-ELG-001 KYC must be verified: input.kyc_verified=True == True -&gt; true
+   <b class="g">[PASS]</b> R-ELG-002 Applicant age must be 21-65: input.age=34 between [21, 65] -&gt; true
+   <b class="g">[PASS]</b> R-ELG-003 Applicant must have an income source: input.employment_status=&#x27;salaried&#x27; not in [&#x27;unemployed&#x27;] -&gt; true
+   <b class="m">[SKIP]</b> R-ELG-004 Self-employed applicants need income &gt;= 5,00,000: not applicable: input.employment_status=&#x27;salaried&#x27; == &#x27;self_employed&#x27; -&gt; false
+Dependency credit_bureau consulted at stage &#x27;credit_assessment&#x27; (1 attempt): {&#x27;bureau_ref&#x27;: &#x27;CB-682DC6BF&#x27;, &#x27;open_defaults&#x27;: 0, &#x27;score&#x27;: 680}
+Stage &#x27;credit_assessment&#x27;: 2 passed, 1 failed, 0 skipped -&gt; outcome REVIEW -&gt; MANUAL_REVIEW
+   <b class="g">[PASS]</b> R-CRD-001 Bureau score must be &gt;= 550: deps.credit.score=680 &gt;= 550 -&gt; true
+   <b class="g">[PASS]</b> R-CRD-002 No open defaults on record: deps.credit.open_defaults=0 == 0 -&gt; true
+   <b class="r">[FAIL]</b> R-CRD-003 Score &gt;= 700 for straight-through approval: deps.credit.score=680 &gt;= 700 -&gt; false =&gt; REVIEW
+Engine outcome MANUAL_REVIEW driven by: R-CRD-003 (review)
+Manual review by credit.officer@bank: APPROVED (system recommended MANUAL_REVIEW). Notes: Salary slips verified offline; score near threshold.
+Audit trail: 7 entries, hash chain VALID</pre></div>
+
+<div class="ex"><h3>Example B: dependency outage → RETRY_PENDING → automatic recovery</h3>
+<pre class='trace'>Request 1080c2e2-cc47-4ff2-82ff-22ba17c5a441 | workflow loan_application v2 (config 8e695389fb8d) | status APPROVED
+Stage &#x27;eligibility&#x27;: 3 passed, 0 failed, 1 skipped -&gt; outcome PASS -&gt; credit_assessment
+   <b class="g">[PASS]</b> R-ELG-001 KYC must be verified: input.kyc_verified=True == True -&gt; true
+   <b class="g">[PASS]</b> R-ELG-002 Applicant age must be 21-65: input.age=34 between [21, 65] -&gt; true
+   <b class="g">[PASS]</b> R-ELG-003 Applicant must have an income source: input.employment_status=&#x27;salaried&#x27; not in [&#x27;unemployed&#x27;] -&gt; true
+   <b class="m">[SKIP]</b> R-ELG-004 Self-employed applicants need income &gt;= 5,00,000: not applicable: input.employment_status=&#x27;salaried&#x27; == &#x27;self_employed&#x27; -&gt; false
+Dependency credit_bureau FAILED at stage &#x27;credit_assessment&#x27; after 3 attempt(s): credit_bureau: retries exhausted after 3 attempts -&gt; policy &#x27;retry&#x27;
+Workflow retry #1 of 3 scheduled in 30s
+Workflow retry #1 started by retry-worker (resumes at the checkpointed stage)
+Dependency credit_bureau consulted at stage &#x27;credit_assessment&#x27; (1 attempt): {&#x27;bureau_ref&#x27;: &#x27;CB-6FA93833&#x27;, &#x27;open_defaults&#x27;: 0, &#x27;score&#x27;: 742}
+Stage &#x27;credit_assessment&#x27;: 3 passed, 0 failed, 0 skipped -&gt; outcome PASS -&gt; affordability
+   <b class="g">[PASS]</b> R-CRD-001 Bureau score must be &gt;= 550: deps.credit.score=742 &gt;= 550 -&gt; true
+   <b class="g">[PASS]</b> R-CRD-002 No open defaults on record: deps.credit.open_defaults=0 == 0 -&gt; true
+   <b class="g">[PASS]</b> R-CRD-003 Score &gt;= 700 for straight-through approval: deps.credit.score=742 &gt;= 700 -&gt; true
+Stage &#x27;affordability&#x27;: 2 passed, 0 failed, 0 skipped -&gt; outcome PASS -&gt; APPROVED
+   <b class="g">[PASS]</b> R-AFF-001 Loan must not exceed 5x annual income: input.loan_amount=1400000 &lt;= 6000000 (input.annual_income x5) -&gt; true
+   <b class="g">[PASS]</b> R-AFF-002 Existing debt should be &lt;= 50% of income: input.existing_debt=150000 &lt;= 600000.0 (input.annual_income x0.5) -&gt; true
+Decision APPROVED: every applicable rule passed
+Audit trail: 10 entries, hash chain VALID</pre></div>
+
+<div class="ex"><h3>Example C: conditional branching to senior approval</h3>
+<pre class='trace'>Request 8a947757-1d99-42ea-bcfe-b18e5a29dfd4 | workflow loan_application v2 (config 8e695389fb8d) | status APPROVED
+Stage &#x27;eligibility&#x27;: 3 passed, 0 failed, 1 skipped -&gt; outcome PASS -&gt; credit_assessment
+Dependency credit_bureau consulted at stage &#x27;credit_assessment&#x27; (1 attempt): {&#x27;bureau_ref&#x27;: &#x27;CB-04C35D19&#x27;, &#x27;open_defaults&#x27;: 0, &#x27;score&#x27;: 801}
+Stage &#x27;credit_assessment&#x27;: 3 passed, 0 failed, 0 skipped -&gt; outcome PASS -&gt; affordability
+   <b class="g">[PASS]</b> R-CRD-001 Bureau score must be &gt;= 550: deps.credit.score=801 &gt;= 550 -&gt; true
+   <b class="g">[PASS]</b> R-CRD-002 No open defaults on record: deps.credit.open_defaults=0 == 0 -&gt; true
+   <b class="g">[PASS]</b> R-CRD-003 Score &gt;= 700 for straight-through approval: deps.credit.score=801 &gt;= 700 -&gt; true
+Stage &#x27;affordability&#x27;: 2 passed, 0 failed, 0 skipped -&gt; outcome PASS -&gt; senior_approval via branch [input.loan_amount=4500000 &gt; 2000000 -&gt; true]
+   <b class="g">[PASS]</b> R-AFF-001 Loan must not exceed 5x annual income: input.loan_amount=4500000 &lt;= 30000000 (input.annual_income x5) -&gt; true
+   <b class="g">[PASS]</b> R-AFF-002 Existing debt should be &lt;= 50% of income: input.existing_debt=0 &lt;= 3000000.0 (input.annual_income x0.5) -&gt; true
+Stage &#x27;senior_approval&#x27;: 1 passed, 0 failed, 0 skipped -&gt; outcome PASS -&gt; APPROVED
+   <b class="g">[PASS]</b> R-SNR-001 Large loans need score &gt;= 750 and salaried employment: (deps.credit.score=801 &gt;= 750 -&gt; true AND input.employment_status=&#x27;salaried&#x27; == &#x27;salaried&#x27; -&gt; true)
+Decision APPROVED: every applicable rule passed
+Audit trail: 8 entries, hash chain VALID</pre></div>
+
+<div class="ex"><h3>Example D: invalid input</h3>
+<div class="cols"><div><b>Input</b><pre class='json'>{
+ &quot;applicant_id&quot;: &quot;12345&quot;,
+ &quot;full_name&quot;: &quot;X&quot;,
+ &quot;age&quot;: &quot;thirty&quot;,
+ &quot;loan_amount&quot;: -5,
+ &quot;employment_status&quot;: &quot;pilot&quot;
+}</pre></div><div><b>Explanation</b><pre class='trace'>Request 40cb0bbc-18dd-48a2-b20b-64679588f7e6 | workflow loan_application v2 (config 8e695389fb8d) | status INVALID
+Rejected at intake: input failed schema validation:
+  - $.annual_income: is required
+  - $.kyc_verified: is required
+  - $.applicant_id: does not match pattern ^APP-[0-9]{4,}$
+  - $.full_name: length must be &gt;= 2
+  - $.age: expected integer, got string
+  - $.loan_amount: must be &gt; 0, got -5
+  - $.employment_status: must be one of [&#x27;salaried&#x27;, &#x27;self_employed&#x27;, &#x27;unemployed&#x27;, &#x27;student&#x27;], got &#x27;pilot&#x27;
+Audit trail: 2 entries, hash chain VALID</pre></div></div></div>
+
+<div class="ex"><h3>Example E: vendor screening unavailable → fail-safe review</h3>
+<pre class='trace'>Request 8e551818-7cd3-44b4-81f2-7755fcf2fe2c | workflow vendor_approval v1 (config 8e124e6f99c1) | status MANUAL_REVIEW
+Dependency sanctions_screening FAILED at stage &#x27;compliance&#x27; after 3 attempt(s): sanctions_screening: retries exhausted after 3 attempts -&gt; policy &#x27;review&#x27;
+Decision MANUAL_REVIEW: sanctions_screening: dependency unavailable (policy=review); routed to a human
+Audit trail: 4 entries, hash chain VALID</pre></div>
+
+<h2 class="pb"><span class="n">12</span>Trade-offs</h2>
+<table><tr><th style="width:23%">Decision</th><th style="width:23%">Alternative</th><th>Why</th></tr>
+<tr><td>JSON condition DSL</td><td>Embedded expressions / scripting; rules-engine library</td><td>No code execution, validated at load, diffable between versions, explainable value by value. Less expressive, but derived thresholds and composites cover the use cases.</td></tr>
+<tr><td>Acyclic stage graph</td><td>Allow loops</td><td>Guaranteed termination. Repetition (retries) belongs to the lifecycle, not the graph.</td></tr>
+<tr><td>Stage-level checkpoints</td><td>Per-rule, or none</td><td>Rules are pure and cheap, so re-running a stage is free. Fewer writes than per-rule.</td></tr>
+<tr><td>Persist dependency results immediately</td><td>Persist at checkpoint</td><td>Never double-call a paid or side-effecting service after a crash.</td></tr>
+<tr><td>Synchronous submit + async retry worker</td><td>Fully async queue</td><td>One round trip for the common case, async only for slow paths. The queue is the scale-out step (§14).</td></tr>
+<tr><td>SQLite + stdlib</td><td>Postgres + FastAPI + Redis</td><td>Zero setup for reviewers. Transactions, UNIQUE and conditional UPDATE map one-to-one onto Postgres.</td></tr>
+<tr><td>Payload hash as fallback key</td><td>Mandatory key</td><td>Protects naive clients from double submits. Cost: two identical payloads merge, which is accepted because clients can send keys.</td></tr>
+<tr><td>Evaluate every rule (no short-circuit)</td><td>Stop at first failure</td><td>Explanations show every reason. The cost is negligible.</td></tr>
+<tr><td>Fail-safe fallbacks (→ MANUAL_REVIEW)</td><td>Auto-reject / auto-approve</td><td>When information is missing a human decides. Configurable per workflow.</td></tr>
+<tr><td>Immutable config versions</td><td>Edit in place</td><td>Reproducible decisions and safe pinning of in-flight requests. Rollback is a pointer change.</td></tr>
+</table>
+
+<h2><span class="n">13</span>Assumptions</h2>
+<ul>
+<li>Requests are JSON objects of at most 1 MB. Seconds of latency are acceptable on the retry path.</li>
+<li>External dependencies are read-only lookups, so caching their result per request is valid.</li>
+<li>A human reviewer is available for <code>MANUAL_REVIEW</code>. Reviewer identity comes from the caller, since auth is out of scope.</li>
+<li>Clock skew between workers is below the lease TTL (60 s).</li>
+<li>Config authors are trusted, but configs are still validated, because typos are the common failure.</li>
+</ul>
+
+<h2><span class="n">14</span>Scaling considerations</h2>
+<table><tr><th style="width:22%">Pressure</th><th>Approach</th></tr>
+<tr><td>Throughput</td><td>API and workers are stateless; run N replicas. Leases and the UNIQUE constraint already make concurrent workers safe. On Postgres, use <code>SELECT … FOR UPDATE SKIP LOCKED</code> for the sweep.</td></tr>
+<tr><td>Slow dependencies</td><td>Return 202 + <code>request_id</code> and process from a queue (Kafka/SQS) partitioned by request id. The resumable stage loop maps directly onto a consumer.</td></tr>
+<tr><td>Dependency protection</td><td>Breakers already exist per dependency. Add bulkheads (separate pools), per-dependency rate limits, and shared breaker state via Redis.</td></tr>
+<tr><td>Audit growth</td><td>The log is append-only: partition by month and archive to object storage. Hash chains are per request, so partitions are independent.</td></tr>
+<tr><td>Read load</td><td>Explanations derive from immutable rows: use read replicas and caching.</td></tr>
+<tr><td>Config distribution</td><td>Immutable versions published to a config store and cached by (workflow, version). Reload is atomic.</td></tr>
+<tr><td>Observability</td><td>Structured request logs exist. Add metrics per workflow, stage and rule (decision mix, review rate, dependency latency, breaker state, retry backlog) and alerts.</td></tr>
+</table>
+
+<h2><span class="n">15</span>How to run</h2>
+<pre>git clone https://github.com/billbented/resilient-decision-system
+cd resilient-decision-system
+python3 -m unittest discover -s tests -t . -v      # 85 tests, ~1 s
+python3 -m decision_platform demo                  # 14 scenarios -> docs/DECISION_EXAMPLES.md
+python3 -m decision_platform serve --port 8080     # REST API + retry worker
+
+curl -X POST localhost:8080/workflows/loan_application/requests \
+     -H 'Idempotency-Key: k1' -d @examples/payloads/loan_review.json
+curl localhost:8080/requests/&lt;id&gt;/explain</pre>
+<p class="small">Requirements: Python 3.10+. No packages to install.</p>
+</body></html>

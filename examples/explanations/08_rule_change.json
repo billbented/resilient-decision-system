@@ -1,0 +1,160 @@
+{
+  "request_id": "a41c3c81-7a2c-40eb-a654-7b63e2f9e25f",
+  "workflow": "loan_application",
+  "workflow_version": 2,
+  "config_hash": "8e695389fb8df33bc89ab54c925d782e55375997abe39681cf8d0c8e3a583075",
+  "status": "MANUAL_REVIEW",
+  "decision": "MANUAL_REVIEW",
+  "input": {
+    "applicant_id": "APP-1002",
+    "full_name": "Vikram Shah",
+    "age": 34,
+    "annual_income": 1200000,
+    "loan_amount": 1450000,
+    "employment_status": "salaried",
+    "existing_debt": 150000,
+    "kyc_verified": true
+  },
+  "path": [
+    "eligibility",
+    "credit_assessment"
+  ],
+  "rules_triggered": [
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.kyc_verified=True == True -> true",
+      "data_refs": {
+        "input.kyc_verified": true
+      }
+    },
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.age=34 between [21, 65] -> true",
+      "data_refs": {
+        "input.age": 34
+      }
+    },
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-003",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.employment_status='salaried' not in ['unemployed'] -> true",
+      "data_refs": {
+        "input.employment_status": "salaried"
+      }
+    },
+    {
+      "stage": "eligibility",
+      "rule_id": "R-ELG-004",
+      "status": "skipped",
+      "effect": null,
+      "explanation": "not applicable: input.employment_status='salaried' == 'self_employed' -> false",
+      "data_refs": {
+        "input.employment_status": "salaried"
+      }
+    },
+    {
+      "stage": "credit_assessment",
+      "rule_id": "R-CRD-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "deps.credit.score=680 >= 550 -> true",
+      "data_refs": {
+        "deps.credit.score": 680
+      }
+    },
+    {
+      "stage": "credit_assessment",
+      "rule_id": "R-CRD-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "deps.credit.open_defaults=0 == 0 -> true",
+      "data_refs": {
+        "deps.credit.open_defaults": 0
+      }
+    },
+    {
+      "stage": "credit_assessment",
+      "rule_id": "R-CRD-003",
+      "status": "failed",
+      "effect": "review",
+      "explanation": "deps.credit.score=680 >= 700 -> false",
+      "data_refs": {
+        "deps.credit.score": 680
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "event": "dependency.called",
+      "stage": "credit_assessment",
+      "dependency": "credit_bureau",
+      "output": {
+        "bureau_ref": "CB-682DC6BF",
+        "open_defaults": 0,
+        "score": 680
+      },
+      "error": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "latency_ms": 0.0,
+          "outcome": "ok"
+        }
+      ],
+      "policy": null
+    }
+  ],
+  "decision_reasons": {
+    "decided_at_stage": "credit_assessment",
+    "outcome": "review",
+    "decisive_rules": [
+      {
+        "rule_id": "R-CRD-003",
+        "description": "Score >= 700 for straight-through approval",
+        "effect": "review",
+        "explanation": "deps.credit.score=680 >= 700 -> false",
+        "reason": null
+      }
+    ],
+    "flags": [],
+    "path": [
+      "eligibility",
+      "credit_assessment"
+    ],
+    "branch": null
+  },
+  "manual_review": null,
+  "state_history": [
+    "- -> RECEIVED (request received)",
+    "RECEIVED -> IN_PROGRESS (schema validation passed)",
+    "IN_PROGRESS -> MANUAL_REVIEW (stage 'credit_assessment' outcome=review)"
+  ],
+  "audit_integrity": {
+    "valid": true,
+    "entries": 6,
+    "head": "139160b0796ff53ccfa1fcda4b5d463b04a0bff2c49519ebf2b030c10e6c1288"
+  },
+  "narrative": [
+    "Request a41c3c81-7a2c-40eb-a654-7b63e2f9e25f | workflow loan_application v2 (config 8e695389fb8d) | status MANUAL_REVIEW",
+    "Stage 'eligibility': 3 passed, 0 failed, 1 skipped -> outcome PASS -> credit_assessment",
+    "   [PASS] R-ELG-001 KYC must be verified: input.kyc_verified=True == True -> true",
+    "   [PASS] R-ELG-002 Applicant age must be 21-65: input.age=34 between [21, 65] -> true",
+    "   [PASS] R-ELG-003 Applicant must have an income source: input.employment_status='salaried' not in ['unemployed'] -> true",
+    "   [SKIP] R-ELG-004 Self-employed applicants need income >= 5,00,000: not applicable: input.employment_status='salaried' == 'self_employed' -> false",
+    "Dependency credit_bureau consulted at stage 'credit_assessment' (1 attempt): {'bureau_ref': 'CB-682DC6BF', 'open_defaults': 0, 'score': 680}",
+    "Stage 'credit_assessment': 2 passed, 1 failed, 0 skipped -> outcome REVIEW -> MANUAL_REVIEW",
+    "   [PASS] R-CRD-001 Bureau score must be >= 550: deps.credit.score=680 >= 550 -> true",
+    "   [PASS] R-CRD-002 No open defaults on record: deps.credit.open_defaults=0 == 0 -> true",
+    "   [FAIL] R-CRD-003 Score >= 700 for straight-through approval: deps.credit.score=680 >= 700 -> false => REVIEW",
+    "Decision MANUAL_REVIEW driven by: R-CRD-003 (review)",
+    "Audit trail: 6 entries, hash chain VALID"
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "request_id": "15084ec2-64da-4b8c-944a-c3c7ca0b915d",
+  "workflow": "employee_onboarding",
+  "workflow_version": 1,
+  "config_hash": "11704d7b20d89b118647d958d7fa46e29b1e060e5c010a83603c43655b59af7c",
+  "status": "MANUAL_REVIEW",
+  "decision": "MANUAL_REVIEW",
+  "input": {
+    "employee_id": "EMP-204",
+    "name": "Kavya Nair",
+    "department": "finance",
+    "start_date": "2026-12-01",
+    "documents": [
+      "id_proof",
+      "offer_letter_signed"
+    ],
+    "background_check": "clear"
+  },
+  "path": [
+    "document_check"
+  ],
+  "rules_triggered": [
+    {
+      "stage": "document_check",
+      "rule_id": "R-EMP-001",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.documents=['id_proof', 'offer_letter_signed'] contains 'id_proof' -> true",
+      "data_refs": {
+        "input.documents": [
+          "id_proof",
+          "offer_letter_signed"
+        ]
+      }
+    },
+    {
+      "stage": "document_check",
+      "rule_id": "R-EMP-002",
+      "status": "passed",
+      "effect": null,
+      "explanation": "input.documents=['id_proof', 'offer_letter_signed'] contains 'offer_letter_signed' -> true",
+      "data_refs": {
+        "input.documents": [
+          "id_proof",
+          "offer_letter_signed"
+        ]
+      }
+    },
+    {
+      "stage": "document_check",
+      "rule_id": "R-EMP-003",
+      "status": "failed",
+      "effect": "review",
+      "explanation": "input.documents=['id_proof', 'offer_letter_signed'] contains 'nda_signed' -> false",
+      "data_refs": {
+        "input.department": "finance",
+        "input.documents": [
+          "id_proof",
+          "offer_letter_signed"
+        ]
+      }
+    },
+    {
+      "stage": "document_check",
+      "rule_id": "R-EMP-004",
+      "status": "failed",
+      "effect": "flag",
+      "explanation": "input.documents=['id_proof', 'offer_letter_signed'] contains 'bank_details' -> false",
+      "data_refs": {
+        "input.documents": [
+          "id_proof",
+          "offer_letter_signed"
+        ]
+      }
+    }
+  ],
+  "dependencies": [],
+  "decision_reasons": {
+    "decided_at_stage": "document_check",
+    "outcome": "review",
+    "decisive_rules": [
+      {
+        "rule_id": "R-EMP-003",
+        "description": "Finance staff must sign an NDA",
+        "effect": "review",
+        "explanation": "input.documents=['id_proof', 'offer_letter_signed'] contains 'nda_signed' -> false",
+        "reason": null
+      }
+    ],
+    "flags": [
+      "R-EMP-004"
+    ],
+    "path": [
+      "document_check"
+    ],
+    "branch": null
+  },
+  "manual_review": null,
+  "state_history": [
+    "- -> RECEIVED (request received)",
+    "RECEIVED -> IN_PROGRESS (schema validation passed)",
+    "IN_PROGRESS -> MANUAL_REVIEW (stage 'document_check' outcome=review)"
+  ],
+  "audit_integrity": {
+    "valid": true,
+    "entries": 4,
+    "head": "723ba7a0feacff5108e7555b79f34a3e270d88c128fa0b1ddda2f0dddc8a62a2"
+  },
+  "narrative": [
+    "Request 15084ec2-64da-4b8c-944a-c3c7ca0b915d | workflow employee_onboarding v1 (config 11704d7b20d8) | status MANUAL_REVIEW",
+    "Stage 'document_check': 2 passed, 2 failed, 0 skipped -> outcome REVIEW -> MANUAL_REVIEW",
+    "   [PASS] R-EMP-001 Government id proof submitted: input.documents=['id_proof', 'offer_letter_signed'] contains 'id_proof' -> true",
+    "   [PASS] R-EMP-002 Signed offer letter submitted: input.documents=['id_proof', 'offer_letter_signed'] contains 'offer_letter_signed' -> true",
+    "   [FAIL] R-EMP-003 Finance staff must sign an NDA: input.documents=['id_proof', 'offer_letter_signed'] contains 'nda_signed' -> false => REVIEW",
+    "   [FAIL] R-EMP-004 Bank details needed before first payroll: input.documents=['id_proof', 'offer_letter_signed'] contains 'bank_details' -> false => FLAG",
+    "Decision MANUAL_REVIEW driven by: R-EMP-003 (review)",
+    "Flags raised (non-blocking): R-EMP-004",
+    "Audit trail: 4 entries, hash chain VALID"
+  ]
+}

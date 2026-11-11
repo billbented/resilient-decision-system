@@ -1,0 +1,10 @@
+{
+  "applicant_id": "APP-1001",
+  "full_name": "Asha Rao",
+  "age": 34,
+  "annual_income": 1200000,
+  "loan_amount": 1500000,
+  "employment_status": "salaried",
+  "existing_debt": 150000,
+  "kyc_verified": true
+}

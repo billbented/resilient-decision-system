@@ -1,0 +1,221 @@
+{
+  "workflow": "insurance_claim",
+  "version": 1,
+  "description": "Insurance claim processing: policy checks -> document verification (external) -> fast-track or adjuster",
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "claim_id",
+      "policy_id",
+      "policy_active",
+      "claim_type",
+      "claim_amount",
+      "coverage_limit",
+      "incident_date",
+      "document_id",
+      "prior_claims_12m"
+    ],
+    "properties": {
+      "claim_id": {
+        "type": "string",
+        "pattern": "^CLM-[0-9]{4,}$"
+      },
+      "policy_id": {
+        "type": "string",
+        "minLength": 3
+      },
+      "policy_active": {
+        "type": "boolean"
+      },
+      "claim_type": {
+        "type": "string",
+        "enum": [
+          "health",
+          "motor",
+          "property"
+        ]
+      },
+      "claim_amount": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "coverage_limit": {
+        "type": "number",
+        "minimum": 0
+      },
+      "incident_date": {
+        "type": "string",
+        "format": "date"
+      },
+      "document_id": {
+        "type": "string",
+        "pattern": "^DOC-[0-9]{4,}$"
+      },
+      "prior_claims_12m": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "dependencies": {
+    "document_verifier": {
+      "timeout_ms": 500,
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 20,
+        "max_delay_ms": 200
+      }
+    }
+  },
+  "retry_policy": {
+    "max_attempts": 3,
+    "backoff_seconds": [
+      30,
+      120,
+      600
+    ],
+    "on_exhausted": "MANUAL_REVIEW"
+  },
+  "start": "policy_checks",
+  "stages": {
+    "policy_checks": {
+      "rules": [
+        {
+          "id": "R-CLM-001",
+          "type": "mandatory",
+          "description": "Policy must be active",
+          "condition": {
+            "field": "input.policy_active",
+            "op": "eq",
+            "value": true
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-CLM-002",
+          "type": "threshold",
+          "description": "Claim must be within coverage limit",
+          "condition": {
+            "field": "input.claim_amount",
+            "op": "lte",
+            "value": {
+              "ref": "input.coverage_limit"
+            }
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-CLM-003",
+          "type": "threshold",
+          "description": "Fewer than 3 claims in last 12 months (fraud signal)",
+          "condition": {
+            "field": "input.prior_claims_12m",
+            "op": "lt",
+            "value": 3
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "document_verification"
+      }
+    },
+    "document_verification": {
+      "fetch": [
+        {
+          "dependency": "document_verifier",
+          "input": {
+            "document_id": "$input.document_id"
+          },
+          "store_as": "doc",
+          "on_unavailable": "retry"
+        }
+      ],
+      "rules": [
+        {
+          "id": "R-DOC-001",
+          "type": "dependency",
+          "description": "No document tampering detected",
+          "condition": {
+            "field": "deps.doc.tamper_detected",
+            "op": "eq",
+            "value": false
+          },
+          "on_fail": "reject"
+        },
+        {
+          "id": "R-DOC-002",
+          "type": "dependency",
+          "description": "Documents verified by provider",
+          "condition": {
+            "field": "deps.doc.verified",
+            "op": "eq",
+            "value": true
+          },
+          "on_fail": "review"
+        },
+        {
+          "id": "R-DOC-003",
+          "type": "threshold",
+          "description": "Verification confidence >= 0.85",
+          "condition": {
+            "field": "deps.doc.confidence",
+            "op": "gte",
+            "value": 0.85
+          },
+          "on_fail": "flag"
+        }
+      ],
+      "transitions": {
+        "pass": [
+          {
+            "when": {
+              "field": "input.claim_amount",
+              "op": "lte",
+              "value": 25000
+            },
+            "to": "APPROVED"
+          },
+          {
+            "to": "adjuster_assessment"
+          }
+        ]
+      }
+    },
+    "adjuster_assessment": {
+      "rules": [
+        {
+          "id": "R-ADJ-001",
+          "type": "threshold",
+          "description": "Claims above 2,00,000 need an adjuster",
+          "condition": {
+            "field": "input.claim_amount",
+            "op": "lte",
+            "value": 200000
+          },
+          "on_fail": "review"
+        },
+        {
+          "id": "R-ADJ-002",
+          "type": "conditional",
+          "description": "Property claims need a site survey above 1,00,000",
+          "when": {
+            "field": "input.claim_type",
+            "op": "eq",
+            "value": "property"
+          },
+          "condition": {
+            "field": "input.claim_amount",
+            "op": "lte",
+            "value": 100000
+          },
+          "on_fail": "review"
+        }
+      ],
+      "transitions": {
+        "pass": "APPROVED"
+      }
+    }
+  }
+}

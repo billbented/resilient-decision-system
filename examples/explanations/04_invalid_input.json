@@ -1,0 +1,51 @@
+{
+  "request_id": "40cb0bbc-18dd-48a2-b20b-64679588f7e6",
+  "workflow": "loan_application",
+  "workflow_version": 2,
+  "config_hash": "8e695389fb8df33bc89ab54c925d782e55375997abe39681cf8d0c8e3a583075",
+  "status": "INVALID",
+  "decision": "INVALID",
+  "input": {
+    "applicant_id": "12345",
+    "full_name": "X",
+    "age": "thirty",
+    "loan_amount": -5,
+    "employment_status": "pilot"
+  },
+  "path": [],
+  "rules_triggered": [],
+  "dependencies": [],
+  "decision_reasons": {
+    "validation_errors": [
+      "$.annual_income: is required",
+      "$.kyc_verified: is required",
+      "$.applicant_id: does not match pattern ^APP-[0-9]{4,}$",
+      "$.full_name: length must be >= 2",
+      "$.age: expected integer, got string",
+      "$.loan_amount: must be > 0, got -5",
+      "$.employment_status: must be one of ['salaried', 'self_employed', 'unemployed', 'student'], got 'pilot'"
+    ]
+  },
+  "manual_review": null,
+  "state_history": [
+    "- -> RECEIVED (request received)",
+    "RECEIVED -> INVALID (schema validation failed)"
+  ],
+  "audit_integrity": {
+    "valid": true,
+    "entries": 2,
+    "head": "eeac9498c969bcac60b5beaa6ed201f8a298060b34372c96c33b686f5d66dce3"
+  },
+  "narrative": [
+    "Request 40cb0bbc-18dd-48a2-b20b-64679588f7e6 | workflow loan_application v2 (config 8e695389fb8d) | status INVALID",
+    "Rejected at intake: input failed schema validation:",
+    "  - $.annual_income: is required",
+    "  - $.kyc_verified: is required",
+    "  - $.applicant_id: does not match pattern ^APP-[0-9]{4,}$",
+    "  - $.full_name: length must be >= 2",
+    "  - $.age: expected integer, got string",
+    "  - $.loan_amount: must be > 0, got -5",
+    "  - $.employment_status: must be one of ['salaried', 'self_employed', 'unemployed', 'student'], got 'pilot'",
+    "Audit trail: 2 entries, hash chain VALID"
+  ]
+}
