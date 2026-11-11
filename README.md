@@ -16,7 +16,8 @@ Four business workflows ship as pure JSON config, with no workflow-specific code
 docs/ARCHITECTURE.md        system design, components, data flow, trade-offs, assumptions, scaling
 docs/CONFIGURATION.md       the configuration model (how to add a workflow / change a rule)
 docs/DECISION_EXAMPLES.md   14 worked examples: input -> rules triggered -> output -> audit reasoning
-docs/Solution_Report.pdf    the full write-up as a PDF
+docs/Solution_Report.pdf    the full write-up as a PDF (15 pages)
+docs/Submission_Summary.pdf two-page submission summary
 ```
 
 ## Quick start

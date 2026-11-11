@@ -1,0 +1,91 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Submission Summary — Resilient Decision System</title><style>
+@page { size: A4; margin: 14mm 15mm; }
+:root { --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --accent:#4f46e5; }
+body { font-family: Inter, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); font-size: 9.8pt; line-height: 1.45; margin: 0; background:#fff; }
+h1 { font-size: 21pt; margin: 2px 0 4px; letter-spacing: -0.02em; }
+h2 { font-size: 12pt; margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 2px solid var(--accent); break-after: avoid; }
+.kicker { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 8.5pt; }
+.sub { color: var(--muted); font-size: 10.5pt; margin-bottom: 8px; }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: #f8fafc; }
+.repo { border-left: 4px solid var(--accent); background: #eef2ff; padding: 8px 12px; border-radius: 0 8px 8px 0; margin: 8px 0; font-size: 10.5pt; }
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 10px 0; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+.stat b { display:block; font-size: 16pt; color: var(--accent); line-height: 1.1; }
+.stat span { font-size: 8pt; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 8.9pt; margin: 4px 0 8px; }
+th, td { text-align: left; vertical-align: top; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+th { background: #f1f5f9; }
+tr { break-inside: avoid; }
+code, pre { font-family: Menlo, Consolas, monospace; font-size: 8.3pt; }
+code { background: #f1f5f9; padding: 0 3px; border-radius: 3px; }
+pre { background: #0f172a; color: #e2e8f0; border-radius: 6px; padding: 8px 10px; margin: 4px 0 8px; white-space: pre-wrap; }
+ul { margin: 4px 0 8px 0; padding-left: 18px; } li { margin: 2px 0; }
+a { color: var(--accent); text-decoration: none; }
+.ok { color: #16a34a; font-weight: 700; }
+.small { font-size: 8.5pt; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+</style></head><body>
+<div class="kicker">ScoreMe Placement Drive · Hackathon submission</div>
+<h1>Resilient Decision System</h1>
+<div class="sub">Configurable Workflow Decision Platform · Rajul Tiwari · <a href="https://github.com/billbented">github.com/billbented</a></div>
+
+<div class="repo"><b>GitHub repository:</b> <a href="https://github.com/billbented/resilient-decision-system">https://github.com/billbented/resilient-decision-system</a><br>
+<span class="small">Attached: this summary + <b>Solution_Report.pdf</b> (full architecture, design and test write-up)</span></div>
+
+<div class="stats">
+ <div class="stat"><b>85/85</b><span>tests passing</span></div>
+ <div class="stat"><b>4</b><span>workflows, config only</span></div>
+ <div class="stat"><b>14</b><span>explained decision examples</span></div>
+ <div class="stat"><b>17</b><span>REST endpoints + CLI</span></div>
+ <div class="stat"><b>0</b><span>external packages needed</span></div>
+</div>
+
+<h2>What I built</h2>
+<p>One generic decision engine. Each business process is a versioned JSON workflow:
+<b>loan application</b> (v1 and v2), <b>insurance claim</b>, <b>vendor approval</b> and <b>employee onboarding</b>.
+For each request, the platform:</p>
+<ul>
+<li>validates it and blocks duplicates;</li>
+<li>pins it to the active rules version;</li>
+<li>runs it stage by stage, calling simulated external services such as a credit bureau, a document verifier and sanctions screening;</li>
+<li>saves progress atomically after every stage;</li>
+<li>ends in <b>Approved</b>, <b>Rejected</b> or <b>Manual review</b>, or waits and retries automatically if a service is down.</li>
+</ul>
+<p>Every decision comes with a step-by-step explanation and a tamper-evident audit trail.</p>
+
+<h2>How it maps to the evaluation criteria</h2>
+<table><tr><th style="width:22%">Criterion</th><th style="width:7%">Marks</th><th>Evidence</th></tr>
+<tr><td><b>Problem Structuring</b></td><td>20</td><td>Five concerns, one owner each: what (JSON config) · how (pure rule engine) · when (orchestrator + state machine) · remember (store) · outside world (dependency gateway).</td></tr><tr><td><b>Architecture Quality</b></td><td>20</td><td>Layered: transport → application → pure domain → infrastructure. Storage and dependencies are swappable in one file (composition root).</td></tr><tr><td><b>Engineering Robustness</b></td><td>20</td><td>DB-enforced idempotency, atomic per-stage checkpoints, cached dependency results, leases, optimistic locking, timeouts, jittered retries, circuit breaker, scheduled workflow retries, fail-safe fallbacks.</td></tr><tr><td><b>Configurability</b></td><td>15</td><td>Versioned JSON workflows validated at load; atomic hot reload; in-flight requests pinned to their version; what-if simulation; one-call rollback.</td></tr><tr><td><b>Explainability &amp; Audit</b></td><td>10</td><td>Every rule records actual vs expected values and the data it read; hash-chained audit verified on read; plain-language explanation endpoint.</td></tr><tr><td><b>Testing Depth</b></td><td>10</td><td>85 tests: concurrency race, mid-transaction failure, real timeouts, breaker recovery, audit tampering, HTTP end-to-end.</td></tr><tr><td><b>Trade-off Defence</b></td><td>5</td><td>Every major choice documented with the rejected alternative and why (report §12, ARCHITECTURE.md §8).</td></tr>
+</table>
+
+<h2>Deliverables</h2>
+<table><tr><th style="width:52%">Required</th><th>Where (links open on GitHub)</th></tr>
+<tr><td>Working runnable implementation + README</td><td><a href="https://github.com/billbented/resilient-decision-system/blob/main/README.md">README.md</a> · <a href="https://github.com/billbented/resilient-decision-system/blob/main/decision_platform/">decision_platform/</a></td></tr><tr><td>Architecture document</td><td><a href="https://github.com/billbented/resilient-decision-system/blob/main/docs/ARCHITECTURE.md">docs/ARCHITECTURE.md</a></td></tr><tr><td>Configuration model</td><td><a href="https://github.com/billbented/resilient-decision-system/blob/main/docs/CONFIGURATION.md">docs/CONFIGURATION.md</a> · <a href="https://github.com/billbented/resilient-decision-system/blob/main/configs/">configs/*.json</a></td></tr><tr><td>API interface (REST + CLI)</td><td><a href="https://github.com/billbented/resilient-decision-system/blob/main/decision_platform/api.py">api.py</a> · <a href="https://github.com/billbented/resilient-decision-system/blob/main/decision_platform/__main__.py">__main__.py</a></td></tr><tr><td>Tests (85): happy path, invalid input, duplicates, dependency failure, retry, rule change</td><td><a href="https://github.com/billbented/resilient-decision-system/blob/main/tests/">tests/</a></td></tr><tr><td>Decision explanation examples (14)</td><td><a href="https://github.com/billbented/resilient-decision-system/blob/main/docs/DECISION_EXAMPLES.md">docs/DECISION_EXAMPLES.md</a> · <a href="https://github.com/billbented/resilient-decision-system/blob/main/examples/explanations/">examples/explanations/</a></td></tr><tr><td>Full solution report (15 pages)</td><td><a href="https://github.com/billbented/resilient-decision-system/blob/main/docs/Solution_Report.pdf">docs/Solution_Report.pdf</a></td></tr>
+</table>
+
+<h2>Constraints satisfied</h2>
+<table><tr><th style="width:34%">Constraint</th><th>How</th></tr>
+<tr><td>Tolerate requirement changes</td><td>New config version and hot reload. Example: the v2 credit threshold changed 650 → 700 with no code change, and in-flight requests stay on v1.</td></tr>
+<tr><td>Simulate an external dependency</td><td>Three simulated services, with fault injection for errors, timeouts, outages and latency.</td></tr>
+<tr><td>Idempotency</td><td><code>Idempotency-Key</code> plus a payload hash, enforced by a database UNIQUE constraint. In a test, 12 concurrent duplicates produce 1 record and 1 external call.</td></tr>
+<tr><td>Full audit logs</td><td>Hash-chained per request. Records every rule's values, every dependency attempt, every state change and every human decision.</td></tr>
+<tr><td>Configurable without code rewrite</td><td>The employee onboarding workflow needed zero lines of code. Configs are validated at load (cycles, references, operators).</td></tr>
+<tr><td>Scaling considerations</td><td>Stateless workers, leases and a queue-based async path, Postgres with <code>SKIP LOCKED</code>, audit partitioning (report §14).</td></tr>
+</table>
+
+<h2>Verified results</h2>
+<div class="two">
+<div class="box"><b>Test suite:</b> <span class="ok">OK</span>, 85 tests in about 1 second. It also passes on a fresh clone of the repository.<br>
+<span class="small">Covers the happy path, invalid input, duplicates (including concurrent), dependency failure, retry flow, rule change, partial saves and audit tampering.</span></div>
+<div class="box"><b>Demo outcomes</b> (14 scenarios): 6 approved, 1 invalid, 4 manual review, 3 rejected.<br>
+<span class="small">Each shows the input, the rules triggered, the output and the audit reasoning.</span></div>
+</div>
+
+<h2>Run it</h2>
+<pre>git clone https://github.com/billbented/resilient-decision-system
+cd resilient-decision-system
+python3 -m unittest discover -s tests -t .     # 85 tests
+python3 -m decision_platform demo               # 14 explained scenarios
+python3 -m decision_platform serve              # REST API on :8080</pre>
+<p class="small">Requires Python 3.10+ only. Implementation: 2,414 lines of platform code.</p>
+</body></html>
